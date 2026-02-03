@@ -113,6 +113,19 @@ def init_db():
         )
     """)
     
+    # Messages table (Phase6B)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            mission_id INTEGER NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            attachments_json TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (mission_id) REFERENCES missions (id)
+        )
+    """)
+    
     conn.commit()
     conn.close()
 
@@ -365,6 +378,35 @@ def get_uploads_by_ids(upload_ids: List[str]) -> List[Dict[str, Any]]:
     cursor = conn.cursor()
     placeholders = ','.join('?' * len(upload_ids))
     cursor.execute(f"SELECT * FROM uploads WHERE id IN ({placeholders})", upload_ids)
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+# Message CRUD (Phase6B)
+def create_message(mission_id: int, role: str, content: str, attachments_json: Optional[str] = None) -> int:
+    """Create a new message"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO messages (mission_id, role, content, attachments_json)
+        VALUES (?, ?, ?, ?)
+    """, (mission_id, role, content, attachments_json))
+    message_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return message_id
+
+
+def get_messages(mission_id: int) -> List[Dict[str, Any]]:
+    """Get all messages for a mission, ordered by creation time"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT * FROM messages 
+        WHERE mission_id = ?
+        ORDER BY id ASC
+    """, (mission_id,))
     rows = cursor.fetchall()
     conn.close()
     return [dict(row) for row in rows]

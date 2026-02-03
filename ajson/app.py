@@ -31,6 +31,23 @@ class ApprovalDecision(BaseModel):
     decision: str  # "yes" or "no"
 
 
+class MessageCreate(BaseModel):
+    """Create message request"""
+    content: str
+    attachment_ids: Optional[List[str]] = None
+
+
+class MessageOut(BaseModel):
+    """Message response"""
+    id: int
+    mission_id: int
+    role: str
+    content: str
+    attachments_json: Optional[str]
+    created_at: str
+
+
+
 # Helper functions
 def run_to_terminal(mission_id: int):
     """
@@ -69,12 +86,20 @@ def create_mission(mission: MissionCreate, background_tasks: BackgroundTasks):
     Returns:
         { "mission_id": int }
     """
+    from datetime import datetime
+    
     # Initialize database
     db.init_db()
     
+    # Auto-generate title if empty
+    title = mission.title
+    if not title or title.strip() == "":
+        # Use first 20 chars of description + timestamp
+        title = mission.description[:20] + f" {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    
     # Create mission
     mission_id = db.create_mission(
-        title=mission.title,
+        title=title,
         description=mission.description
     )
     
@@ -82,6 +107,7 @@ def create_mission(mission: MissionCreate, background_tasks: BackgroundTasks):
     background_tasks.add_task(run_to_terminal, mission_id)
     
     return {"mission_id": mission_id}
+
 
 
 @app.get("/missions/{mission_id}")
@@ -170,6 +196,67 @@ def approve_mission(mission_id: int, decision: ApprovalDecision, background_task
         }
     else:
         raise HTTPException(status_code=400, detail="Decision must be 'yes' or 'no'")
+
+
+@app.get("/missions/{mission_id}/messages")
+def get_mission_messages(mission_id: int):
+    """
+    Get all messages for a mission
+    
+    Returns:
+        {
+            "mission_id": int,
+            "messages": [...]
+        }
+    """
+    db.init_db()
+    
+    # Verify mission exists
+    mission = db.get_mission(mission_id)
+    if not mission:
+        raise HTTPException(status_code=404, detail=f"Mission {mission_id} not found")
+    
+    messages = db.get_messages(mission_id)
+    
+    return {
+        "mission_id": mission_id,
+        "messages": messages
+    }
+
+
+@app.post("/missions/{mission_id}/messages")
+def create_mission_message(mission_id: int, message: MessageCreate, background_tasks: BackgroundTasks):
+    """
+    Send a message and trigger orchestrator
+    
+    Returns:
+        { "message_id": int, "mission_id": int }
+    """
+    import json
+    
+    db.init_db()
+    
+    # Verify mission exists
+    mission = db.get_mission(mission_id)
+    if not mission:
+        raise HTTPException(status_code=404, detail=f"Mission {mission_id} not found")
+    
+    # Insert user message
+    attachments_json = json.dumps(message.attachment_ids or [])
+    msg_id = db.create_message(
+        mission_id=mission_id,
+        role="user",
+        content=message.content,
+        attachments_json=attachments_json
+    )
+    
+    # Trigger orchestrator in background
+    # Note: Check for existing lock to prevent double execution
+    # For MVP, run_to_terminal already has max iteration protection
+    background_tasks.add_task(run_to_terminal, mission_id)
+    
+    return {"message_id": msg_id, "mission_id": mission_id}
+
 
 
 # Upload configuration

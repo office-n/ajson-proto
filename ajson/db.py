@@ -101,6 +101,18 @@ def init_db():
         )
     """)
     
+    # Uploads table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS uploads (
+            id TEXT PRIMARY KEY,
+            original_name TEXT NOT NULL,
+            stored_name TEXT NOT NULL,
+            size INTEGER NOT NULL,
+            mime_type TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
     conn.commit()
     conn.close()
 
@@ -315,6 +327,44 @@ def get_memories_by_mission(mission_id: int) -> List[Dict[str, Any]]:
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM memories WHERE mission_id = ? ORDER BY created_at", (mission_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+
+# Upload CRUD
+def create_upload(upload_id: str, original_name: str, stored_name: str, size: int, mime_type: str = None) -> str:
+    """Create a new upload record"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT INTO uploads (id, original_name, stored_name, size, mime_type) VALUES (?, ?, ?, ?, ?)",
+        (upload_id, original_name, stored_name, size, mime_type)
+    )
+    conn.commit()
+    conn.close()
+    return upload_id
+
+
+def get_upload(upload_id: str) -> Optional[Dict[str, Any]]:
+    """Get upload by ID"""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM uploads WHERE id = ?", (upload_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_uploads_by_ids(upload_ids: List[str]) -> List[Dict[str, Any]]:
+    """Get multiple uploads by their IDs"""
+    if not upload_ids:
+        return []
+    
+    conn = get_connection()
+    cursor = conn.cursor()
+    placeholders = ','.join('?' * len(upload_ids))
+    cursor.execute(f"SELECT * FROM uploads WHERE id IN ({placeholders})", upload_ids)
     rows = cursor.fetchall()
     conn.close()
     return [dict(row) for row in rows]

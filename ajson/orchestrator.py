@@ -207,6 +207,24 @@ def approve_mission(mission_id: int):
     # Resume from where we stopped
     mission = db.get_mission(mission_id)
     
-    # Determine next state based on approval type
-    # For simplicity, move to EXECUTE
-    db.update_mission_status(mission_id, MissionStatus.EXECUTE)
+    # Determine next state based on last step role
+    steps = db.get_steps_by_mission(mission_id)
+    if steps:
+        last_role = steps[-1]["role"]
+        
+        # Resume based on where we stopped
+        if last_role == "cody_pre_audit":
+            # Stopped during pre-audit, resume to PRE_AUDIT
+            resume_state = MissionStatus.PRE_AUDIT
+        elif last_role == "cody_post_audit":
+            # Stopped during post-audit, resume to POST_AUDIT
+            resume_state = MissionStatus.POST_AUDIT
+        else:
+            # Default: resume to PRE_AUDIT for safety
+            resume_state = MissionStatus.PRE_AUDIT
+    else:
+        # No steps found, default to PRE_AUDIT
+        resume_state = MissionStatus.PRE_AUDIT
+    
+    db.update_mission_status(mission_id, resume_state)
+

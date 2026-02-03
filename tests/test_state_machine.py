@@ -127,9 +127,10 @@ def test_approval_and_resume():
     # Approve and resume
     orchestrator.approve_mission(mission_id)
     
-    # Should move to next state
+    # Should resume to PRE_AUDIT (because last role was "cody_pre_audit")
     mission = db.get_mission(mission_id)
-    assert mission["status"] == MissionStatus.EXECUTE
+    assert mission["status"] == MissionStatus.PRE_AUDIT
+
 
 
 def test_ssot_tracking():

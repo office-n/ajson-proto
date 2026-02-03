@@ -328,7 +328,7 @@ async def upload_file(file: UploadFile = File(...)):
 @app.get("/console", response_class=HTMLResponse)
 def console():
     """
-    Mission Console UI - Single page for mission creation and monitoring
+    Mission Console UI - ChatGPT-style chat interface with legacy form UI
     """
     html_content = """
     <!DOCTYPE html>
@@ -372,13 +372,145 @@ def console():
             
             .subtitle {
                 color: #666;
-                margin-bottom: 30px;
+                margin-bottom: 20px;
                 font-size: 14px;
+            }
+            
+            /* Chat UI Styles */
+            #chatRoot {
+                margin-bottom: 30px;
+            }
+            
+            #chatHistory {
+                max-height: 400px;
+                overflow-y: auto;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 15px;
+                margin-bottom: 15px;
+                background: #f9f9f9;
+            }
+            
+            .chat-message {
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 8px;
+                background: white;
+                border-left: 4px solid #667eea;
+            }
+            
+            .chat-message.user {
+                border-left-color: #4caf50;
+                background: #f1f8f4;
+            }
+            
+            .chat-message.jarvis {
+                border-left-color: #667eea;
+            }
+            
+            .chat-message.cody {
+                border-left-color: #ff9800;
+            }
+            
+            .chat-message.ants {
+                border-left-color: #e91e63;
+            }
+            
+            .chat-role {
+                font-weight: 600;
+                margin-bottom: 5px;
+                font-size: 12px;
+                text-transform: uppercase;
+                color: #666;
+            }
+            
+            .chat-content {
+                margin-bottom: 5px;
+                line-height: 1.5;
+            }
+            
+            .chat-time {
+                font-size: 11px;
+                color: #999;
+            }
+            
+            #chatInputBar {
+                display: flex;
+                gap: 10px;
+                align-items: flex-end;
+            }
+            
+            #chatMessageInput {
+                flex: 1;
+                padding: 12px;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                font-size: 14px;
+                font-family: inherit;
+                resize: vertical;
+                min-height: 50px;
+            }
+            
+            #chatMessageInput:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+            
+            #chatSendBtn {
+                padding: 12px 24px;
+                background: #667eea;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.3s;
+            }
+            
+            #chatSendBtn:hover {
+                background: #5568d3;
+            }
+            
+            #chatSendBtn:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+            
+            #chatError {
+                padding: 10px;
+                background: #ffebee;
+                color: #c62828;
+                border-radius: 8px;
+                margin-bottom: 10px;
+                display: none;
+            }
+            
+            #chatError.show {
+                display: block;
+            }
+            
+            /* Legacy UI Styles */
+            details {
+                margin-top: 20px;
+            }
+            
+            summary {
+                cursor: pointer;
+                font-weight: 600;
+                padding: 10px;
+                background: #f5f5f5;
+                border-radius: 8px;
+            }
+            
+            summary:hover {
+                background: #ececec;
             }
             
             label {
                 display: block;
                 margin-bottom: 8px;
+                margin-top: 15px;
                 font-weight: 600;
                 color: #333;
             }
@@ -389,7 +521,7 @@ def console():
                 border: 2px solid #e0e0e0;
                 border-radius: 8px;
                 font-size: 14px;
-                margin-bottom: 20px;
+                margin-bottom: 10px;
                 transition: border-color 0.3s;
             }
             
@@ -398,105 +530,74 @@ def console():
                 border-color: #667eea;
             }
             
-            textarea {
-                resize: vertical;
-                min-height: 120px;
-                font-family: inherit;
-            }
-            
             button {
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                background: #667eea;
                 color: white;
+                padding: 12px 24px;
                 border: none;
-                padding: 14px 28px;
                 border-radius: 8px;
-                font-size: 16px;
+                font-size: 14px;
                 font-weight: 600;
                 cursor: pointer;
-                transition: transform 0.2s, box-shadow 0.2s;
+                transition: background 0.3s;
             }
             
             button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-            }
-            
-            button:active {
-                transform: translateY(0);
+                background: #5568d3;
             }
             
             button:disabled {
                 background: #ccc;
                 cursor: not-allowed;
-                transform: none;
             }
             
             .status-card {
-                display: none;
-                background: #f8f9fa;
-                border-radius: 8px;
-                padding: 20px;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+                padding: 30px;
                 margin-top: 20px;
+                display: none;
             }
             
             .status-card.active {
                 display: block;
             }
             
-            .status-badge {
-                display: inline-block;
-                padding: 6px 12px;
-                border-radius: 6px;
-                font-size: 12px;
-                font-weight: 600;
-                text-transform: uppercase;
-                margin-right: 10px;
-            }
-            
-            .status-badge.created { background: #e3f2fd; color: #1976d2; }
-            .status-badge.planned { background: #f3e5f5; color: #7b1fa2; }
-            .status-badge.pre_audit { background: #fff3e0; color: #e65100; }
-            .status-badge.execute { background: #e8f5e9; color: #2e7d32; }
-            .status-badge.post_audit { background: #fce4ec; color: #c2185b; }
-            .status-badge.finalize { background: #e0f2f1; color: #00695c; }
-            .status-badge.done { background: #c8e6c9; color: #2e7d32; }
-            .status-badge.pending_approval { background: #fff9c4; color: #f57f17; }
-            .status-badge.error { background: #ffcdd2; color: #c62828; }
-            
             .approval-section {
+                background: #fff3cd;
+                padding: 20px;
+                border-radius: 8px;
                 margin-top: 20px;
-                padding: 16px;
-                background: #fff9c4;
-                border-left: 4px solid #f57f17;
-                border-radius: 4px;
             }
             
             .approval-buttons {
-                margin-top: 12px;
+                display: flex;
+                gap: 10px;
+                margin-top: 15px;
             }
             
             .btn-yes {
                 background: #4caf50;
-                margin-right: 10px;
+            }
+            
+            .btn-yes:hover {
+                background: #45a049;
             }
             
             .btn-no {
                 background: #f44336;
             }
             
-            .step-item {
-                padding: 12px;
-                background: white;
-                border-radius: 6px;
-                margin-bottom: 8px;
-                border-left: 3px solid #667eea;
+            .btn-no:hover {
+                background: #da190b;
             }
             
             .loading {
                 display: inline-block;
-                width: 16px;
-                height: 16px;
-                border: 3px solid #f3f3f3;
+                width: 14px;
+                height: 14px;
+                border: 3px solid #fff;
                 border-top: 3px solid #667eea;
                 border-radius: 50%;
                 animation: spin 1s linear infinite;
@@ -513,25 +614,42 @@ def console():
         <div class="container">
             <div class="card">
                 <h1>🚀 AJSON Mission Console</h1>
-                <p class="subtitle">エージェント駆動型JSON実行システム - MVP</p>
+                <p class="subtitle">エージェント駆動型JSON実行システム - ChatGPT型UI</p>
                 
-                <form id="missionForm">
-                    <label for="title">ミッション名</label>
-                    <input type="text" id="title" name="title" placeholder="例: テスト実行" required>
+                <!-- Chat UI -->
+                <div id="chatRoot">
+                    <div id="chatError"></div>
+                    <div id="chatHistory">
+                        <p style="color: #999; text-align: center;">ミッションを作成すると、ここにチャット履歴が表示されます</p>
+                    </div>
+                    <div id="chatInputBar">
+                        <textarea id="chatMessageInput" placeholder="メッセージを入力..."></textarea>
+                        <button id="chatSendBtn">送信</button>
+                    </div>
+                </div>
+                
+                <!-- Legacy Form UI (collapsed) -->
+                <details>
+                    <summary>詳細設定（従来UI）</summary>
                     
-                    <label for="description">ミッション内容 <button type="button" id="voiceBtn" onclick="startVoiceInput()" style="margin-left: 10px; padding: 4px 8px; font-size: 12px;">🎤 音声入力</button></label>
-                    <textarea id="description" name="description" placeholder="実行したい内容を記述してください..." required></textarea>
-                    
-                    <label for="fileUpload">ファイル添付（任意）</label>
-                    <input type="file" id="fileUpload" name="file" accept=".pdf,.txt,.md,.json,.png,.jpg,.jpeg" style="margin-bottom: 10px;">
-                    <button type="button" onclick="uploadFile()" id="uploadBtn" style="margin-bottom: 20px; background: #4caf50;">📎 ファイルアップロード</button>
-                    <div id="uploadStatus" style="margin-bottom: 20px; font-size: 14px; color: #666;"></div>
-                    
-                    <label for="attachments">添付（パス/URL/upload_id）</label>
-                    <textarea id="attachments" name="attachments" placeholder="パス、URL、またはupload_idを改行区切りで入力（任意）" style="min-height: 80px;"></textarea>
-                    
-                    <button type="submit" id="submitBtn">ミッション作成</button>
-                </form>
+                    <form id="missionForm">
+                        <label for="title">ミッション名</label>
+                        <input type="text" id="title" name="title" placeholder="例: テスト実行" required>
+                        
+                        <label for="description">ミッション内容 <button type="button" id="voiceBtn" onclick="startVoiceInput()" style="margin-left: 10px; padding: 4px 8px; font-size: 12px;">🎤 音声入力</button></label>
+                        <textarea id="description" name="description" placeholder="実行したい内容を記述してください..." required></textarea>
+                        
+                        <label for="fileUpload">ファイル添付（任意）</label>
+                        <input type="file" id="fileUpload" name="file" accept=".pdf,.txt,.md,.json,.png,.jpg,.jpeg" style="margin-bottom: 10px;">
+                        <button type="button" onclick="uploadFile()" id="uploadBtn" style="margin-bottom: 20px; background: #4caf50;">📎 ファイルアップロード</button>
+                        <div id="uploadStatus" style="margin-bottom: 20px; font-size: 14px; color: #666;"></div>
+                        
+                        <label for="attachments">添付（パス/URL/upload_id）</label>
+                        <textarea id="attachments" name="attachments" placeholder="パス、URL、またはupload_idを改行区切りで入力（任意）" style="min-height: 80px;"></textarea>
+                        
+                        <button type="submit" id="submitBtn">ミッション作成</button>
+                    </form>
+                </details>
             </div>
             
             <div class="status-card" id="statusCard">
@@ -561,7 +679,129 @@ def console():
             let currentMissionId = null;
             let pollInterval = null;
             
-            // Upload file function
+            // Chat functions
+            async function loadMessages() {
+                if (!currentMissionId) {
+                    return;
+                }
+                
+                try {
+                    const response = await fetch(`/missions/${currentMissionId}/messages`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    renderMessages(data.messages);
+                    hideError();
+                } catch (error) {
+                    console.error('Failed to load messages:', error);
+                    showError('メッセージの取得に失敗しました: ' + error.message);
+                }
+            }
+            
+            function renderMessages(messages) {
+                const historyDiv = document.getElementById('chatHistory');
+                
+                if (!messages || messages.length === 0) {
+                    historyDiv.innerHTML = '<p style="color: #999; text-align: center;">メッセージがありません</p>';
+                    return;
+                }
+                
+                historyDiv.innerHTML = messages.map(msg => {
+                    const role = msg.role || 'system';
+                    const content = msg.content || '';
+                    const time = msg.created_at || '';
+                    
+                    return `
+                        <div class="chat-message ${role}">
+                            <div class="chat-role">${role}</div>
+                            <div class="chat-content">${escapeHtml(content)}</div>
+                            ${time ? `<div class="chat-time">${time}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+                
+                // Scroll to bottom
+                historyDiv.scrollTop = historyDiv.scrollHeight;
+            }
+            
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            async function sendMessage() {
+                if (!currentMissionId) {
+                    showError('ミッションが選択されていません。先に従来UIでミッションを作成してください。');
+                    return;
+                }
+                
+                const input = document.getElementById('chatMessageInput');
+                const content = input.value.trim();
+                
+                if (!content) {
+                    return;
+                }
+                
+                const sendBtn = document.getElementById('chatSendBtn');
+                sendBtn.disabled = true;
+                sendBtn.textContent = '送信中...';
+                
+                try {
+                    const response = await fetch(`/missions/${currentMissionId}/messages`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content: content,
+                            attachment_ids: []
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    // Clear input
+                    input.value = '';
+                    
+                    // Reload messages
+                    await loadMessages();
+                    hideError();
+                    
+                } catch (error) {
+                    console.error('Failed to send message:', error);
+                    showError('メッセージの送信に失敗しました: ' + error.message);
+                } finally {
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = '送信';
+                }
+            }
+            
+            function showError(message) {
+                const errorDiv = document.getElementById('chatError');
+                errorDiv.textContent = message;
+                errorDiv.classList.add('show');
+            }
+            
+            function hideError() {
+                const errorDiv = document.getElementById('chatError');
+                errorDiv.classList.remove('show');
+            }
+            
+            // Chat send button
+            document.getElementById('chatSendBtn').addEventListener('click', sendMessage);
+            
+            // Enter to send (Shift+Enter for newline)
+            document.getElementById('chatMessageInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // Legacy upload function
             async function uploadFile() {
                 const fileInput = document.getElementById('fileUpload');
                 const file = fileInput.files[0];
@@ -576,7 +816,7 @@ def console():
                 
                 uploadBtn.disabled = true;
                 uploadBtn.textContent = 'アップロード中...';
-                uploadStatus.textContent = '';
+                uploadStatus.innerHTML = '<span style="color: #999;">アップロード中...</span>';
                 
                 try {
                     const formData = new FormData();
@@ -589,12 +829,12 @@ def console():
                     
                     if (!response.ok) {
                         const error = await response.json();
-                        throw new Error(error.detail || 'アップロード失敗');
+                        throw new Error(error.detail || 'Upload failed');
                     }
                     
                     const data = await response.json();
                     
-                    // Add upload_id to attachments textarea
+                    // Add upload_id to attachments field
                     const attachmentsField = document.getElementById('attachments');
                     const currentValue = attachmentsField.value.trim();
                     attachmentsField.value = currentValue 
@@ -658,7 +898,7 @@ def console():
                 const title = document.getElementById('title').value;
                 const description = document.getElementById('description').value;
                 const attachmentsText = document.getElementById('attachments').value;
-                const attachments = attachmentsText.split('\n').filter(line => line.trim() !== '');
+                const attachments = attachmentsText.split('\\n').filter(line => line.trim() !== '');
                 
                 // Disable submit button
                 const submitBtn = document.getElementById('submitBtn');
@@ -683,6 +923,9 @@ def console():
                     // Start polling
                     startPolling();
                     
+                    // Load messages for chat UI
+                    loadMessages();
+                    
                 } catch (error) {
                     alert('ミッション作成エラー: ' + error.message);
                     submitBtn.disabled = false;
@@ -694,7 +937,10 @@ def console():
                 if (pollInterval) clearInterval(pollInterval);
                 
                 // Poll every 1 second
-                pollInterval = setInterval(updateStatus, 1000);
+                pollInterval = setInterval(() => {
+                    updateStatus();
+                    loadMessages(); // Also update chat messages
+                }, 1000);
                 updateStatus(); // Initial update
             }
             

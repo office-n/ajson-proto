@@ -113,6 +113,17 @@ def get_mission(mission_id: int):
     }
 
 
+@app.get("/healthz")
+def healthz():
+    """
+    Health check endpoint for monitoring
+    
+    Returns:
+        {"status": "ok"}
+    """
+    return {"status": "ok"}
+
+
 @app.post("/missions/{mission_id}/approve")
 def approve_mission(mission_id: int, decision: ApprovalDecision, background_tasks: BackgroundTasks):
     """

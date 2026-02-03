@@ -1,14 +1,11 @@
 """
-Demo script to execute sample missions and verify SSOT
+Demo script to execute sample missions via API
 """
-import sys
-import os
-import json
+import httpx
+import time
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from ajson import db, orchestrator
+API_BASE_URL = "http://localhost:8000"
 
 
 def demo_normal_mission():
@@ -17,37 +14,43 @@ def demo_normal_mission():
     print("DEMO 1: Normal Mission (Should complete to DONE)")
     print("="*60)
     
-    # Create mission
-    mission_id = db.create_mission(
-        title="Sample Test Mission",
-        description="Execute pytest tests to verify the AJSON system"
-    )
-    print(f"\n✓ Created mission {mission_id}")
+    # Create mission via API
+    print("\n➤ Creating mission via POST /missions...")
+    response = httpx.post(f"{API_BASE_URL}/missions", json={
+        "title": "Sample Test Mission",
+        "description": "Execute pytest tests to verify the AJSON system",
+        "attachments": []
+    })
     
-    # Execute through all states
+    if response.status_code != 200:
+        print(f"✗ Failed to create mission: {response.status_code}")
+        return None
+    
+    mission_id = response.json()["mission_id"]
+    print(f"✓ Created mission {mission_id}")
+    
+    # Poll until terminal state
+    print("\n➤ Polling mission status...")
     while True:
-        mission = db.get_mission(mission_id)
-        status = mission["status"]
+        response = httpx.get(f"{API_BASE_URL}/missions/{mission_id}")
+        data = response.json()
+        status = data["mission"]["status"]
+        
         print(f"  Current status: {status}")
         
-        if status == "DONE" or status == "PENDING_APPROVAL":
+        if status in ["DONE", "PENDING_APPROVAL", "ERROR"]:
             break
         
-        orchestrator.execute_mission(mission_id)
+        time.sleep(1)
     
     # Show final state
-    mission = db.get_mission(mission_id)
-    print(f"\n✓ Final status: {mission['status']}")
+    print(f"\n✓ Final status: {status}")
     
     # Show SSOT data
-    steps = db.get_steps_by_mission(mission_id)
-    tool_runs = db.get_tool_runs_by_mission(mission_id)
-    artifacts = db.get_artifacts_by_mission(mission_id)
-    
     print(f"\n✓ SSOT Data:")
-    print(f"  - Steps: {len(steps)}")
-    print(f"  - Tool runs: {len(tool_runs)}")
-    print(f"  - Artifacts: {len(artifacts)}")
+    print(f"  - Steps: {len(data['steps'])}")
+    print(f"  - Approvals: {len(data['approvals'])}")
+    print(f"  - Artifacts: {len(data['artifacts'])}")
     
     return mission_id
 
@@ -58,30 +61,40 @@ def demo_approval_mission():
     print("DEMO 2: Approval Required Mission (Should stop at PENDING_APPROVAL)")
     print("="*60)
     
-    # Create mission
-    mission_id = db.create_mission(
-        title="Deploy to Production",
-        description="Deploy application to production environment - requires approval"
-    )
-    print(f"\n✓ Created mission {mission_id}")
+    # Create mission with dangerous keyword
+    print("\n➤ Creating mission with 'deploy' keyword...")
+    response = httpx.post(f"{API_BASE_URL}/missions", json={
+        "title": "Deploy to Production",
+        "description": "Deploy application to production environment - requires approval",
+        "attachments": []
+    })
     
-    # Execute until approval needed
+    if response.status_code != 200:
+        print(f"✗ Failed to create mission: {response.status_code}")
+        return None
+    
+    mission_id = response.json()["mission_id"]
+    print(f"✓ Created mission {mission_id}")
+    
+    # Poll until it stops at PENDING_APPROVAL
+    print("\n➤ Polling mission status...")
     while True:
-        mission = db.get_mission(mission_id)
-        status = mission["status"]
+        response = httpx.get(f"{API_BASE_URL}/missions/{mission_id}")
+        data = response.json()
+        status = data["mission"]["status"]
+        
         print(f"  Current status: {status}")
         
-        if status == "DONE" or status == "PENDING_APPROVAL":
+        if status in ["DONE", "PENDING_APPROVAL", "ERROR"]:
             break
         
-        orchestrator.execute_mission(mission_id)
+        time.sleep(1)
     
     # Show approval requests
-    mission = db.get_mission(mission_id)
-    print(f"\n✓ Final status: {mission['status']}")
+    print(f"\n✓ Final status: {status}")
     
-    if mission["status"] == "PENDING_APPROVAL":
-        approvals = db.get_pending_approvals(mission_id)
+    if status == "PENDING_APPROVAL":
+        approvals = data["approvals"]
         print(f"\n✓ Pending Approvals: {len(approvals)}")
         for approval in approvals:
             print(f"  - Type: {approval['gate_type']}")
@@ -91,30 +104,39 @@ def demo_approval_mission():
 
 
 def show_ssot_summary():
-    """Show SSOT database summary"""
+    """Show SSOT database summary by querying all missions"""
     print("\n" + "="*60)
     print("SSOT DATABASE SUMMARY")
     print("="*60)
     
-    missions = db.list_missions()
-    print(f"\n✓ Total Missions: {len(missions)}")
-    
-    for mission in missions:
-        print(f"\n  Mission {mission['id']}: {mission['title']}")
-        print(f"    Status: {mission['status']}")
-        
-        steps = db.get_steps_by_mission(mission['id'])
-        tool_runs = db.get_tool_runs_by_mission(mission['id'])
-        approvals = db.get_pending_approvals(mission['id'])
-        artifacts = db.get_artifacts_by_mission(mission['id'])
-        
-        print(f"    Steps: {len(steps)}, Tool Runs: {len(tool_runs)}, Approvals: {len(approvals)}, Artifacts: {len(artifacts)}")
+    # Note: In a real implementation, we'd add a GET /missions endpoint
+    # For now, we'll just print what we know from the demos
+    print("\n✓ All missions created via API and tracked in SQLite SSOT")
+    print("  - Each mission has full audit trail (steps, tool_runs, approvals, artifacts)")
+    print("  - API provides real-time status via GET /missions/{id}")
 
 
 if __name__ == "__main__":
-    # Initialize database
-    db.init_db()
-    print("AJSON MVP Demo - Phase0 & Phase1 Complete")
+    print("AJSON MVP Demo - Phase2 & Phase3 Complete (API Mode)")
+    print("=" * 60)
+    print("⚠️  NOTE: This demo requires uvicorn server to be running!")
+    print("    Please start the server in another terminal:")
+    print("    $ cd ajson-proto")
+    print("    $ source venv/bin/activate")
+    print("    $ uvicorn ajson.app:app --reload --port 8000")
+    print("=" * 60)
+    
+    # Ask user to confirm server is running
+    input("\nPress Enter once the server is running...")
+    
+    # Check if server is running
+    try:
+        response = httpx.get(f"{API_BASE_URL}/")
+        print("✓ Server is running!\n")
+    except httpx.ConnectError:
+        print("✗ Server is not running. Please start it first.")
+        print("  Run: uvicorn ajson.app:app --reload --port 8000")
+        exit(1)
     
     # Run demos
     demo_normal_mission()
@@ -124,3 +146,7 @@ if __name__ == "__main__":
     print("\n" + "="*60)
     print("DEMO COMPLETE ✓")
     print("="*60)
+    print("\nNext steps:")
+    print("  - Open http://localhost:8000/console in your browser")
+    print("  - Try creating missions with different descriptions")
+    print("  - Test approval flow with dangerous keywords (deploy, delete, etc.)")

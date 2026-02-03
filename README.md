@@ -99,18 +99,34 @@ cp .env.example .env
 
 ## サンプル実行
 
+### Python Demo Script (推奨)
 ```bash
-# サンプルミッションを投入
+# ターミナル1: サーバー起動
+cd ajson-proto
+source venv/bin/activate
+uvicorn ajson.app:app --reload --port 8000
+
+# ターミナル2: デモ実行
+source venv/bin/activate
+python demo.py
+```
+
+### curl Examples
+```bash
+# サンプルミッション作成
 curl -X POST http://localhost:8000/missions \
   -H "Content-Type: application/json" \
-  -d @missions/sample_mission.json
+  -d '{"title":"Test Mission","description":"Run pytest tests","attachments":[]}'
 
 # ミッション状態確認
 curl http://localhost:8000/missions/1
 
-# 承認が必要な場合
-curl -X POST http://localhost:8000/missions/1/approve
+# 承認（必要な場合）
+curl -X POST http://localhost:8000/missions/1/approve \
+  -H "Content-Type: application/json" \
+  -d '{"decision":"yes"}'
 ```
+
 
 ## 開発ガイド
 

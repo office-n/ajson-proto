@@ -527,6 +527,32 @@ def console():
                 border: 2px dashed #667eea;
             }
             
+            #chatVoiceBtn {
+                padding: 12px;
+                background: #f5f5f5;
+                color: #333;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                font-size: 18px;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            #chatVoiceBtn:hover {
+                background: #ececec;
+            }
+            
+            #chatVoiceBtn.listening {
+                outline: 3px solid #667eea;
+                background: #e3f2fd;
+                animation: pulse 1.5s infinite;
+            }
+            
+            @keyframes pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.7; }
+            }
+            
             #chatError {
                 padding: 10px;
                 background: #ffebee;
@@ -676,6 +702,7 @@ def console():
                     <div id="chatInputBar">
                         <button id="chatAttachBtn" type="button">📎</button>
                         <input id="chatFileInput" type="file" multiple accept=".pdf,.txt,.md,.json,.png,.jpg,.jpeg" style="display: none;" />
+                        <button id="chatVoiceBtn" type="button" title="音声入力">🎤</button>
                         <textarea id="chatMessageInput" placeholder="メッセージを入力..."></textarea>
                         <button id="chatSendBtn">送信</button>
                     </div>
@@ -973,6 +1000,83 @@ def console():
                     uploadAndAttach(e.dataTransfer.files);
                 }
             });
+            
+            // Chat voice input
+            let chatRecognition = null;
+            let isChatListening = false;
+            
+            function startChatVoiceInput() {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                
+                if (!SpeechRecognition) {
+                    showError('このブラウザは音声入力に未対応です（Chrome/Edgeで利用可能）');
+                    return;
+                }
+                
+                const voiceBtn = document.getElementById('chatVoiceBtn');
+                const chatInput = document.getElementById('chatMessageInput');
+                
+                // Toggle: stop if already listening
+                if (isChatListening && chatRecognition) {
+                    chatRecognition.stop();
+                    isChatListening = false;
+                    voiceBtn.classList.remove('listening');
+                    return;
+                }
+                
+                // Initialize recognition if not exists
+                if (!chatRecognition) {
+                    chatRecognition = new SpeechRecognition();
+                    chatRecognition.lang = 'ja-JP';
+                    chatRecognition.continuous = false;
+                    chatRecognition.interimResults = false;
+                    
+                    chatRecognition.onresult = (event) => {
+                        const transcript = event.results[0][0].transcript;
+                        // Append to existing input (or set if empty)
+                        chatInput.value = (chatInput.value.trim() ? chatInput.value.trim() + ' ' : '') + transcript;
+                        hideError();
+                    };
+                    
+                    chatRecognition.onerror = (event) => {
+                        console.error('Voice recognition error:', event.error);
+                        let errorMsg = '音声入力エラー: ';
+                        switch (event.error) {
+                            case 'no-speech':
+                                errorMsg += '音声が検出されませんでした';
+                                break;
+                            case 'audio-capture':
+                                errorMsg += 'マイクにアクセスできません';
+                                break;
+                            case 'not-allowed':
+                                errorMsg += 'マイクの使用が許可されていません';
+                                break;
+                            default:
+                                errorMsg += event.error;
+                        }
+                        showError(errorMsg);
+                    };
+                    
+                    chatRecognition.onend = () => {
+                        isChatListening = false;
+                        voiceBtn.classList.remove('listening');
+                    };
+                }
+                
+                // Start recognition
+                try {
+                    chatRecognition.start();
+                    isChatListening = true;
+                    voiceBtn.classList.add('listening');
+                    hideError();
+                } catch (e) {
+                    console.error('Failed to start recognition:', e);
+                    showError('音声入力の開始に失敗しました');
+                }
+            }
+            
+            // Chat voice button event listener
+            document.getElementById('chatVoiceBtn').addEventListener('click', startChatVoiceInput);
             
             // Legacy upload function
             async function uploadFile() {

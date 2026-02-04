@@ -236,3 +236,111 @@ def test_root_endpoint():
     assert "message" in data
     assert "console" in data
     assert data["console"] == "/console"
+
+
+# Phase6B Tests
+
+def test_messages_api_post_and_get():
+    """Test: POST message then GET messages returns created message"""
+    # Create a mission first
+    create_response = client.post("/missions", json={
+        "title": "Messages Test Mission",
+        "description": "Testing messages API",
+        "attachments": []
+    })
+    mission_id = create_response.json()["mission_id"]
+    
+    # Post a message
+    message_response = client.post(f"/missions/{mission_id}/messages", json={
+        "content": "Hello from test",
+        "attachment_ids": None
+    })
+    
+    assert message_response.status_code == 200
+    msg_data = message_response.json()
+    assert "message_id" in msg_data
+    assert "mission_id" in msg_data
+    assert msg_data["mission_id"] == mission_id
+    
+    # Get messages
+    get_response = client.get(f"/missions/{mission_id}/messages")
+    
+    assert get_response.status_code == 200
+    get_data = get_response.json()
+    assert "messages" in get_data
+    assert "mission_id" in get_data
+    assert get_data["mission_id"] == mission_id
+    
+    # Verify our message is in the list
+    messages = get_data["messages"]
+    assert len(messages) >= 1
+    user_messages = [m for m in messages if m["role"] == "user"]
+    assert len(user_messages) >= 1
+    assert user_messages[0]["content"] == "Hello from test"
+
+
+def test_mission_title_auto_generation():
+    """Test: Empty title generates title from description + timestamp"""
+    # Create mission with empty title
+    response = client.post("/missions", json={
+        "title": "",
+        "description": "This is a test description for auto-title generation",
+        "attachments": []
+    })
+    
+    assert response.status_code == 200
+    mission_id = response.json()["mission_id"]
+    
+    # Get mission and check title
+    get_response = client.get(f"/missions/{mission_id}")
+    mission_data = get_response.json()["mission"]
+    
+    # Title should not be empty
+    assert mission_data["title"] != ""
+    
+    # Title should contain first 20 chars of description
+    assert "This is a test descr" in mission_data["title"]
+    
+    # Title should contain a timestamp pattern (YYYY-MM-DD HH:MM)
+    import re
+    assert re.search(r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}', mission_data["title"])
+
+
+def test_messages_attachment_ids_linkage():
+    """Test: Attachment IDs are stored and retrieved in messages"""
+    # Create a mission
+    create_response = client.post("/missions", json={
+        "title": "Attachment Test",
+        "description": "Testing attachment linkage",
+        "attachments": []
+    })
+    mission_id = create_response.json()["mission_id"]
+    
+    # Post a message with attachment IDs
+    test_upload_ids = ["upload-123", "upload-456"]
+    message_response = client.post(f"/missions/{mission_id}/messages", json={
+        "content": "Message with attachments",
+        "attachment_ids": test_upload_ids
+    })
+    
+    assert message_response.status_code == 200
+    message_id = message_response.json()["message_id"]
+    
+    # Get messages and verify attachments_json
+    get_response = client.get(f"/missions/{mission_id}/messages")
+    messages = get_response.json()["messages"]
+    
+    # Find our message
+    our_message = None
+    for msg in messages:
+        if msg["id"] == message_id:
+            our_message = msg
+            break
+    
+    assert our_message is not None
+    assert our_message["content"] == "Message with attachments"
+    
+    # Verify attachments_json contains our upload IDs
+    import json
+    attachments = json.loads(our_message["attachments_json"])
+    assert attachments == test_upload_ids

@@ -36,3 +36,6 @@ workspace/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Uploads (test files)
+uploads/*.txt

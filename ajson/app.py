@@ -477,6 +477,56 @@ def console():
                 cursor: not-allowed;
             }
             
+            #chatAttachBtn {
+                padding: 12px;
+                background: #f5f5f5;
+                color: #333;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                font-size: 18px;
+                cursor: pointer;
+                transition: background 0.3s;
+            }
+            
+            #chatAttachBtn:hover {
+                background: #ececec;
+            }
+            
+            #chatAttachments {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                margin-bottom: 10px;
+            }
+            
+            .attachment-chip {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 12px;
+                background: #e3f2fd;
+                border: 1px solid #90caf9;
+                border-radius: 16px;
+                font-size: 12px;
+                color: #1976d2;
+            }
+            
+            .attachment-chip .remove-btn {
+                cursor: pointer;
+                font-weight: bold;
+                padding: 0 4px;
+                color: #1976d2;
+            }
+            
+            .attachment-chip .remove-btn:hover {
+                color: #c62828;
+            }
+            
+            #chatRoot.drag-over {
+                background: #f0f4ff;
+                border: 2px dashed #667eea;
+            }
+            
             #chatError {
                 padding: 10px;
                 background: #ffebee;
@@ -622,7 +672,10 @@ def console():
                     <div id="chatHistory">
                         <p style="color: #999; text-align: center;">ミッションを作成すると、ここにチャット履歴が表示されます</p>
                     </div>
+                    <div id="chatAttachments"></div>
                     <div id="chatInputBar">
+                        <button id="chatAttachBtn" type="button">📎</button>
+                        <input id="chatFileInput" type="file" multiple accept=".pdf,.txt,.md,.json,.png,.jpg,.jpeg" style="display: none;" />
                         <textarea id="chatMessageInput" placeholder="メッセージを入力..."></textarea>
                         <button id="chatSendBtn">送信</button>
                     </div>
@@ -713,10 +766,37 @@ def console():
                     const content = msg.content || '';
                     const time = msg.created_at || '';
                     
+                    // Render attachments if present
+                    let attachmentsHtml = '';
+                    if (msg.attachments_json) {
+                        let attachments = [];
+                        
+                        // Parse JSON string if needed
+                        if (typeof msg.attachments_json === 'string') {
+                            try {
+                                attachments = JSON.parse(msg.attachments_json);
+                            } catch (e) {
+                                console.error('Failed to parse attachments_json:', e);
+                                attachments = [msg.attachments_json]; // Fallback
+                            }
+                        } else if (Array.isArray(msg.attachments_json)) {
+                            attachments = msg.attachments_json;
+                        }
+                        
+                        if (attachments.length > 0) {
+                            attachmentsHtml = '<div style="margin-top: 8px;">' +
+                                attachments.map(id => 
+                                    `<div class="attachment-chip">📎 ${id}</div>`
+                                ).join('') +
+                            '</div>';
+                        }
+                    }
+                    
                     return `
                         <div class="chat-message ${role}">
                             <div class="chat-role">${role}</div>
                             <div class="chat-content">${escapeHtml(content)}</div>
+                            ${attachmentsHtml}
                             ${time ? `<div class="chat-time">${time}</div>` : ''}
                         </div>
                     `;
@@ -730,6 +810,65 @@ def console():
                 const div = document.createElement('div');
                 div.textContent = text;
                 return div.innerHTML;
+            }
+            
+            // Attachment state and functions
+            let pendingAttachments = []; // {upload_id, filename, size}
+            
+            function renderPendingAttachments() {
+                const container = document.getElementById('chatAttachments');
+                
+                if (pendingAttachments.length === 0) {
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                container.innerHTML = pendingAttachments.map((att, index) => `
+                    <div class="attachment-chip">
+                        📎 ${att.filename || att.upload_id}
+                        <span class="remove-btn" onclick="removeAttachment(${index})">✕</span>
+                    </div>
+                `).join('');
+            }
+            
+            function removeAttachment(index) {
+                pendingAttachments.splice(index, 1);
+                renderPendingAttachments();
+            }
+            
+            async function uploadAndAttach(files) {
+                if (!files || files.length === 0) return;
+                
+                for (const file of files) {
+                    try {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        
+                        const response = await fetch('/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        
+                        if (!response.ok) {
+                            const error = await response.json();
+                            throw new Error(error.detail || 'Upload failed');
+                        }
+                        
+                        const data = await response.json();
+                        pendingAttachments.push({
+                            upload_id: data.upload_id,
+                            filename: data.filename,
+                            size: data.size
+                        });
+                        
+                        renderPendingAttachments();
+                        hideError();
+                        
+                    } catch (error) {
+                        console.error('Upload error:', error);
+                        showError('アップロードエラー: ' + error.message);
+                    }
+                }
             }
             
             async function sendMessage() {
@@ -755,7 +894,7 @@ def console():
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             content: content,
-                            attachment_ids: []
+                            attachment_ids: pendingAttachments.map(a => a.upload_id)
                         })
                     });
                     
@@ -763,8 +902,10 @@ def console():
                         throw new Error(`HTTP ${response.status}`);
                     }
                     
-                    // Clear input
+                    // Clear input and attachments
                     input.value = '';
+                    pendingAttachments = [];
+                    renderPendingAttachments();
                     
                     // Reload messages
                     await loadMessages();
@@ -798,6 +939,38 @@ def console():
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendMessage();
+                }
+            });
+            
+            // Attach button
+            document.getElementById('chatAttachBtn').addEventListener('click', () => {
+                document.getElementById('chatFileInput').click();
+            });
+            
+            document.getElementById('chatFileInput').addEventListener('change', (e) => {
+                uploadAndAttach(e.target.files);
+                e.target.value = ''; // Reset input
+            });
+            
+            // Drag and drop
+            const chatRoot = document.getElementById('chatRoot');
+            
+            chatRoot.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                chatRoot.classList.add('drag-over');
+            });
+            
+            chatRoot.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                chatRoot.classList.remove('drag-over');
+            });
+            
+            chatRoot.addEventListener('drop', (e) => {
+                e.preventDefault();
+                chatRoot.classList.remove('drag-over');
+                
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    uploadAndAttach(e.dataTransfer.files);
                 }
             });
             

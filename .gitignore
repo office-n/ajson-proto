@@ -39,3 +39,5 @@ htmlcov/
 
 # Uploads (test files)
 uploads/*.txt
+uploads/*
+!uploads/.gitkeep

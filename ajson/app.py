@@ -695,6 +695,7 @@ def console():
                 <!-- Chat UI -->
                 <div id="chatRoot">
                     <div id="chatError"></div>
+                    <div id="missionStatusDisplay" style="text-align: center; padding: 8px; font-size: 13px; color: #999;">未選択（最初の送信で自動作成されます）</div>
                     <div id="chatHistory">
                         <p style="color: #999; text-align: center;">ミッションを作成すると、ここにチャット履歴が表示されます</p>
                     </div>
@@ -758,6 +759,28 @@ def console():
         <script>
             let currentMissionId = null;
             let pollInterval = null;
+            
+            // Initialize on page load
+            document.addEventListener('DOMContentLoaded', () => {
+                // Check URL for mission_id
+                const params = new URLSearchParams(window.location.search);
+                const missionIdFromUrl = params.get('mission_id');
+                if (missionIdFromUrl) {
+                    const parsedId = parseInt(missionIdFromUrl, 10);
+                    // Validate mission_id from URL (補強②)
+                    if (!isNaN(parsedId) && parsedId > 0) {
+                        currentMissionId = parsedId;
+                        updateMissionStatusDisplay();
+                        startPolling();
+                        loadMessages();
+                    } else {
+                        console.error('Invalid mission_id in URL:', missionIdFromUrl);
+                        showError('URLのmission_idが無効です');
+                    }
+                } else {
+                    updateMissionStatusDisplay();
+                }
+            });
             
             // Chat functions
             async function loadMessages() {
@@ -899,11 +922,6 @@ def console():
             }
             
             async function sendMessage() {
-                if (!currentMissionId) {
-                    showError('ミッションが選択されていません。先に従来UIでミッションを作成してください。');
-                    return;
-                }
-                
                 const input = document.getElementById('chatMessageInput');
                 const content = input.value.trim();
                 
@@ -916,6 +934,42 @@ def console():
                 sendBtn.textContent = '送信中...';
                 
                 try {
+                    // Auto-create mission if not exists
+                    if (!currentMissionId) {
+                        const createResponse = await fetch('/missions', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                title: '',  // Server auto-generates from first message
+                                description: content,
+                                attachments: pendingAttachments.map(a => a.upload_id)
+                            })
+                        });
+                        
+                        if (!createResponse.ok) {
+                            throw new Error(`ミッション作成失敗: HTTP ${createResponse.status}`);
+                        }
+                        
+                        const createData = await createResponse.json();
+                        
+                        // Validate mission_id (補強②)
+                        if (!createData.mission_id || typeof createData.mission_id !== 'number') {
+                            throw new Error('ミッション作成失敗: 無効なmission_idが返されました');
+                        }
+                        
+                        currentMissionId = createData.mission_id;
+                        
+                        // Update URL
+                        history.replaceState({}, '', `/console?mission_id=${currentMissionId}`);
+                        
+                        // Update mission status display
+                        updateMissionStatusDisplay();
+                        
+                        // Start polling (with guard)
+                        startPolling();
+                    }
+                    
+                    // Send message
                     const response = await fetch(`/missions/${currentMissionId}/messages`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -944,6 +998,15 @@ def console():
                 } finally {
                     sendBtn.disabled = false;
                     sendBtn.textContent = '送信';
+                }
+            }
+            
+            function updateMissionStatusDisplay() {
+                const statusDiv = document.getElementById('missionStatusDisplay');
+                if (currentMissionId) {
+                    statusDiv.innerHTML = `<span style="color: #666;">現在のミッション: #${currentMissionId}</span>`;
+                } else {
+                    statusDiv.innerHTML = `<span style="color: #999;">未選択（最初の送信で自動作成されます）<br><small style="font-size: 11px;">※初回メッセージはミッション内容としても使用されます</small></span>`;
                 }
             }
             
@@ -1211,7 +1274,11 @@ def console():
             });
             
             function startPolling() {
-                if (pollInterval) clearInterval(pollInterval);
+                // Polling guard (補強①): prevent double intervals
+                if (pollInterval) {
+                    console.log('Polling already active, skipping restart');
+                    return;
+                }
                 
                 // Poll every 1 second
                 pollInterval = setInterval(() => {

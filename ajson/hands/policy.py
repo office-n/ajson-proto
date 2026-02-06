@@ -78,10 +78,6 @@ class ApprovalPolicy:
         "docker rm",
         "DROP DATABASE",
         "DROP TABLE",
-        "curl",
-        "wget",
-        "nc ",
-        "telnet",
     ]
     
     # Destructive patterns
@@ -142,7 +138,12 @@ class ApprovalPolicy:
                 if len(operation_lower) == len(pattern_lower) or operation_lower[len(pattern_lower)] in [' ', '\t', '\n']:
                     return (PolicyDecision.ALLOW, OperationCategory.READONLY, f"Allowed: matches allowlist")
         
-        # 2. Check denylist (immediate denial)
+        # 2. Check network patterns BEFORE denylist (to get correct category=NETWORK)
+        for pattern in cls.NETWORK_PATTERNS:
+            if re.search(pattern, operation, re.IGNORECASE):
+                return (PolicyDecision.DENY, OperationCategory.NETWORK, f"Denied: network operation")
+        
+        # 3. Check denylist (immediate denial)
         for pattern in cls.DENYLIST:
             if pattern.lower() in operation_lower:
                 # Determine if destructive or irreversible based on pattern
@@ -150,11 +151,6 @@ class ApprovalPolicy:
                     return (PolicyDecision.DENY, OperationCategory.DESTRUCTIVE, f"Destructive: matches denylist pattern '{pattern}'")
                 else:
                     return (PolicyDecision.DENY, OperationCategory.IRREVERSIBLE, f"Denied: matches denylist pattern '{pattern}'")
-        
-        # 3. Check network patterns (denied)
-        for pattern in cls.NETWORK_PATTERNS:
-            if pattern.lower() in operation_lower:
-                return (PolicyDecision.DENY, OperationCategory.NETWORK, f"Denied: network operation")
         
         # 4. Check destructive patterns (require approval when not dry_run)
         for pattern in cls.DESTRUCTIVE_PATTERNS:

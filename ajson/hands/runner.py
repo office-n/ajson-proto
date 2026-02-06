@@ -64,9 +64,15 @@ class ToolRunner:
         # Legacy compatibility: use check_approval_required for requires_approval field
         requires_approval, legacy_reason, gate_type = ApprovalPolicy.check_approval_required(operation_cmd, dry_run=self.dry_run)
         
-        # Handle DENY (legacy: convert to ApprovalRequiredError for destructive denylist items)
+        # Handle DENY (legacy: convert to ApprovalRequiredError ONLY for destructive/irreversible denylist items)
         if decision == PolicyDecision.DENY:
-            # Legacy behavior: destructive denylist items raised ApprovalRequiredError
+            # Network denials should always raise PolicyDeniedError
+            if category == OperationCategory.NETWORK:
+                error = PolicyDeniedError(operation_cmd, reason, category)
+                self._log_audit(operation_str, decision, category, reason, error=str(error))
+                raise error
+            
+            # Legacy behavior: destructive/irreversible denylist items raised ApprovalRequiredError
             if category in [OperationCategory.DESTRUCTIVE, OperationCategory.IRREVERSIBLE]:
                 if not self.dry_run:
                     gate_map = {
@@ -76,8 +82,12 @@ class ToolRunner:
                     error = ApprovalRequiredError(operation_str, reason, gate_map.get(category))
                     self._log_audit(operation_str, decision, category, reason, error=str(error))
                     raise error
+                else:
+                    # DRY_RUN mode: log but don't raise
+                    self._log_audit(operation_str, decision, category, reason, result={"dry_run": True, "status": "blocked"})
+                    return {"dry_run": True, "status": "blocked", "decision": decision.value, "category": category.value, "reason": reason, "requires_approval": requires_approval, "output": f"DRY_RUN: operation blocked: {reason}"}
             else:
-                # Non-destructive denies (e.g., network) still raise PolicyDeniedError
+                # Other denies (e.g., unknown category) raise PolicyDeniedError
                 error = PolicyDeniedError(operation_cmd, reason, category)
                 self._log_audit(operation_str, decision, category, reason, error=str(error))
                 raise error

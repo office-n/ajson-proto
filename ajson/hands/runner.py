@@ -38,9 +38,16 @@ class ToolRunner:
         """
         operation_str = f"{tool_name} {args}"
         
-        # Check approval policy
+        # Convert args to command-like string for pattern matching
+        if isinstance(args, dict):
+            args_str = " ".join(f"{k} {v}" if not k.startswith("-") else f"{k} {v}" for k, v in args.items())
+            operation_cmd = f"{tool_name} {args_str}"
+        else:
+            operation_cmd = operation_str
+        
+        # Check approval policy with command string
         requires_approval, reason, gate_type = ApprovalPolicy.check_approval_required(
-            operation_str, dry_run=self.dry_run
+            operation_cmd, dry_run=self.dry_run
         )
         
         if requires_approval and not self.dry_run:

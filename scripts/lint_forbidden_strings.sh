@@ -20,7 +20,7 @@ VIOLATIONS=0
 
 # Check 1: file:// scheme (absolute file paths)
 echo "Check 1: file:// scheme"
-if grep -rIn "file://" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null; then
+if grep -rIn "file://" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v "lint_forbidden_strings.sh"; then
     echo "❌ VIOLATION: file:// scheme found"
     VIOLATIONS=$((VIOLATIONS + 1))
 else
@@ -30,7 +30,7 @@ echo ""
 
 # Check 2: Absolute paths (/Users/, /home/)
 echo "Check 2: Absolute paths"
-if grep -rIn "/Users/\|/home/" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null; then
+if grep -rIn "/Users/\|/home/" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v "lint_forbidden_strings.sh"; then
     echo "❌ VIOLATION: Absolute paths found"
     VIOLATIONS=$((VIOLATIONS + 1))
 else

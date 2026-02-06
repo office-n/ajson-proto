@@ -25,8 +25,8 @@
 
 ### P1: Documentation & Quality
 
-- [ ] README.mdにLint実行手順を追記
-- [ ] .github/workflows/lint.yml を作成（CI/CD統合）
+- [x] README.mdにLint実行手順を追記
+- [x] .github/workflows/lint.yml を作成（CI/CD統合）
 - [ ] pytest実行前に自動Lint実行する仕組み追加
 - [ ] Phase 1-3のPRにスクリーンショット追加（UI変更の証拠）
 

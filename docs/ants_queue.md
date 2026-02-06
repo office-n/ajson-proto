@@ -23,11 +23,11 @@
 - [x] Lint導入（scripts/lint_forbidden_strings.sh）
 - [x] Phase8 PRをgh CLIで自動作成（進行中）
 
-### P1: Documentation & Quality
+### P1: Documentation & Quality（完了）
 
 - [x] README.mdにLint実行手順を追記
 - [x] .github/workflows/lint.yml を作成（CI/CD統合）
-- [ ] pytest実行前に自動Lint実行する仕組み追加
+- [x] pytest実行前に自動Lint実行する仕組み追加（conftest.py）
 - [ ] Phase 1-3のPRにスクリーンショット追加（UI変更の証拠）
 
 ### P2: Code Quality & Testing

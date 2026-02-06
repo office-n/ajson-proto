@@ -21,7 +21,7 @@
 - [x] Phase3サニタイズ証跡v4を完成版にする（プレースホルダ削除）
 - [x] Phase8証跡v2を作成（規約違反是正、絶対パス参照削除、force push明示）
 - [x] Lint導入（scripts/lint_forbidden_strings.sh）
-- [ ] Phase8 PRをgh CLIで自動作成
+- [x] Phase8 PRをgh CLIで自動作成（進行中）
 
 ### P1: Documentation & Quality
 

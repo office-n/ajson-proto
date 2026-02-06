@@ -39,7 +39,7 @@
 
 ### 改善案（自動補充候補）
 
-- [ ] docs/architecture.md 作成（LLM Gateway, Hands, UI Consoleの構成図）
+- [x] docs/architecture.md 作成（LLM Gateway, Hands, UI Consoleの構成図、commit: 次で確認）
 - [ ] Performance測定（pytest --durations=10）
 - [ ] Security audit（bandit, safety）
 - [ ] Type hints追加率向上（mypy --strict）

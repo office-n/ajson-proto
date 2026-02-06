@@ -1,15 +1,26 @@
 """
-Tool Runner: Execute tools with approval gates (DRY_RUN only scaffold)
+Tool Runner: Executes tools with approval gates + audit logging
+
+Expansion: JSON audit logs + PolicyDecision enforcement
 """
-from typing import Dict, Any, Optional
-from ajson.hands.policy import ApprovalPolicy, ApprovalRequiredError
+from typing import Dict, Any, List, Optional
+import json
+import subprocess
+from ajson.hands.policy import (
+    ApprovalPolicy,
+    PolicyDecision,
+   OperationCategory,
+    ApprovalRequiredError,
+    PolicyDeniedError,
+    ApprovalRequired,  # Legacy compatibility
+)
 
 
 class ToolRunner:
     """
-    Tool Runner with approval gates
+    Tool Runner with approval gates and stable audit logging
     
-    Phase 8 scaffold: DRY_RUN only, no actual execution
+    Expansion: Policy integration + JSON-serializable audit log
     """
     
     def __init__(self, dry_run: bool = True):
@@ -20,7 +31,7 @@ class ToolRunner:
             dry_run: If True, no actual execution (scaffold default)
         """
         self.dry_run = dry_run
-        self.audit_log = []
+        self.audit_log: List[Dict[str, Any]] = []
     
     def execute_tool(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -35,8 +46,10 @@ class ToolRunner:
             
         Raises:
             ApprovalRequiredError: If operation requires approval and dry_run is False
+            PolicyDeniedError: If operation is denied by policy
         """
-        operation_str = f"{tool_name} {args}"
+        # Legacy operation string format: "tool_name {args}"
+        operation_str = f"{tool_name} {str(args)}"
         
         # Convert args to command-like string for pattern matching
         if isinstance(args, dict):
@@ -45,36 +58,141 @@ class ToolRunner:
         else:
             operation_cmd = operation_str
         
-        # Check approval policy with command string
-        requires_approval, reason, gate_type = ApprovalPolicy.check_approval_required(
-            operation_cmd, dry_run=self.dry_run
-        )
+        # Evaluate policy
+        decision, category, reason = ApprovalPolicy.evaluate(operation_cmd, dry_run=self.dry_run)
         
-        if requires_approval and not self.dry_run:
-            raise ApprovalRequiredError(operation_str, reason, gate_type)
+        # Legacy compatibility: use check_approval_required for requires_approval field
+        requires_approval, legacy_reason, gate_type = ApprovalPolicy.check_approval_required(operation_cmd, dry_run=self.dry_run)
         
-        # DRY_RUN: return dummy result
-        result = {
-            "tool_name": tool_name,
-            "args": args,
-            "dry_run": self.dry_run,
-            "requires_approval": requires_approval,
-            "reason": reason,
-            "status": "simulated" if self.dry_run else "executed",
-            "output": f"DRY_RUN: {tool_name} with {args}" if self.dry_run else "EXECUTED"
-        }
+        # Handle DENY (legacy: convert to ApprovalRequiredError ONLY for destructive/irreversible denylist items)
+        if decision == PolicyDecision.DENY:
+            # Network denials should always raise PolicyDeniedError
+            if category == OperationCategory.NETWORK:
+                error = PolicyDeniedError(operation_cmd, reason, category)
+                self._log_audit(operation_str, decision, category, reason, error=str(error))
+                raise error
+            
+            # Legacy behavior: destructive/irreversible denylist items raised ApprovalRequiredError
+            if category in [OperationCategory.DESTRUCTIVE, OperationCategory.IRREVERSIBLE]:
+                if not self.dry_run:
+                    gate_map = {
+                        OperationCategory.DESTRUCTIVE: ApprovalRequired.DESTRUCTIVE,
+                        OperationCategory.IRREVERSIBLE: ApprovalRequired.IRREVERSIBLE,
+                    }
+                    error = ApprovalRequiredError(operation_str, reason, gate_map.get(category))
+                    self._log_audit(operation_str, decision, category, reason, error=str(error))
+                    raise error
+                else:
+                    # DRY_RUN mode: log but don't raise
+                    self._log_audit(operation_str, decision, category, reason, result={"dry_run": True, "status": "blocked"})
+                    return {"dry_run": True, "status": "blocked", "decision": decision.value, "category": category.value, "reason": reason, "requires_approval": requires_approval, "output": f"DRY_RUN: operation blocked: {reason}"}
+            else:
+                # Other denies (e.g., unknown category) raise PolicyDeniedError
+                error = PolicyDeniedError(operation_cmd, reason, category)
+                self._log_audit(operation_str, decision, category, reason, error=str(error))
+                raise error
         
-        # Audit log
-        self.audit_log.append({
-            "operation": operation_str,
-            "dry_run": self.dry_run,
-            "requires_approval": requires_approval,
-            "reason": reason,
-            "result": result
-        })
+        # Handle REQUIRE_APPROVAL (non-dry-run)
+        if decision == PolicyDecision.REQUIRE_APPROVAL and not self.dry_run:
+            gate_map = {
+                OperationCategory.DESTRUCTIVE: ApprovalRequired.DESTRUCTIVE,
+                OperationCategory.PAID: ApprovalRequired.PAID,
+                OperationCategory.IRREVERSIBLE: ApprovalRequired.IRREVERSIBLE,
+            }
+            gate_type = gate_map.get(category, None)
+            error = ApprovalRequiredError(operation_str, reason, gate_type)
+            self._log_audit(operation_str, decision, category, reason, error=str(error))
+            raise error
+        
+        # Execute (or simulate)
+        if self.dry_run or decision == PolicyDecision.DRY_RUN_ONLY:
+            result = self._simulate_execution(tool_name, args, decision, category, reason)
+        else:
+            # ALLOW: actual execution would happen here
+            result = self._execute_actual(tool_name, args, decision, category, reason)
+        
+        # Add legacy fields for backwards compatibility
+        result["requires_approval"] = requires_approval
+        if "output" not in result:
+            result["output"] = result.get("output", f"DRY_RUN: {tool_name} with {json.dumps(args)}" if self.dry_run else f"EXECUTED: {tool_name}")
+        
+        # Log audit
+        self._log_audit(operation_str, decision, category, reason, result=result)
         
         return result
     
-    def get_audit_log(self) -> list:
-        """Get audit log"""
+    def _simulate_execution(
+        self,
+        tool_name: str,
+        args: Dict[str, Any],
+        decision: PolicyDecision,
+        category: OperationCategory,
+        reason: str
+    ) -> Dict[str, Any]:
+        """Simulate execution (DRY_RUN)"""
+        return {
+            "tool_name": tool_name,
+            "args": args,
+            "dry_run": True,
+            "decision": decision.value,
+            "category": category.value,
+            "reason": reason,
+            "status": "simulated",
+            "output": f"DRY_RUN: {tool_name} with {json.dumps(args)}"
+        }
+    
+    def _execute_actual(
+        self,
+        tool_name: str,
+        args: Dict[str, Any],
+        decision: PolicyDecision,
+        category: OperationCategory,
+        reason: str
+    ) -> Dict[str, Any]:
+        """Execute actual operation (ALLOW in non-dry-run)"""
+        # Real execution would happen here
+        # For now, return placeholder
+        return {
+            "tool_name": tool_name,
+            "args": args,
+            "dry_run": False,
+            "decision": decision.value,
+            "category": category.value,
+            "reason": reason,
+            "status": "executed",
+            "output": f"EXECUTED: {tool_name} with {json.dumps(args)}"
+        }
+    
+    def _log_audit(
+        self,
+        operation: str,
+        decision: PolicyDecision,
+        category: OperationCategory,
+        reason: str,
+        result: Optional[Dict[str, Any]] = None,
+        error: Optional[str] = None
+    ):
+        """Log audit entry (JSON-serializable)"""
+        entry = {
+            "operation": operation,
+            "decision": decision.value,
+            "category": category.value,
+            "reason": reason,
+            "dry_run": self.dry_run,
+        }
+        
+        if result:
+            entry["result"] = result
+        
+        if error:
+            entry["error"] = error
+        
+        self.audit_log.append(entry)
+    
+    def get_audit_log(self) -> List[Dict[str, Any]]:
+        """Get audit log (JSON-serializable)"""
         return self.audit_log
+    
+    def get_audit_log_json(self) -> str:
+        """Get audit log as JSON string"""
+        return json.dumps(self.audit_log, indent=2)

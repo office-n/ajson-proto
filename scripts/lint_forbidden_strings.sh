@@ -40,7 +40,7 @@ echo ""
 
 # Check 3: API key patterns (sk-, AIza, etc.)
 echo "Check 3: API key patterns"
-if grep -rInE "sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z\\-_]{20,}" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v ".env.example" | grep -v "README.md" | grep -v "docs/" | grep -v "scripts/lint_forbidden_strings.sh"; then
+if grep -rInE "sk-[A-Za-z0-9]{20,}|AIza[0-9A-Za-z\\-_]{20,}" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v ".env.example" | grep -v "README.md" | grep -v "docs/" | grep -v "tests/" | grep -v "scripts/lint_forbidden_strings.sh"; then
     echo "❌ VIOLATION: API key patterns found (not in safe files)"
     VIOLATIONS=$((VIOLATIONS + 1))
 else

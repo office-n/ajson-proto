@@ -441,14 +441,17 @@ def console():
             }
             
             #chatMessageInput {
-                flex: 1;
+                width: 100%;
                 padding: 12px;
                 border: 2px solid #e0e0e0;
                 border-radius: 8px;
-                font-size: 14px;
+                font-size: 16px;
                 font-family: inherit;
-                resize: vertical;
+                resize: none;
                 min-height: 50px;
+                max-height: 200px;
+                overflow-y: auto;
+                line-height: 1.5;
             }
             
             #chatMessageInput:focus {
@@ -684,6 +687,53 @@ def console():
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
             }
+            
+            /* Mobile optimization */
+            @media (max-width: 600px) {
+                #chatMessageInput {
+                    min-height: 80px;
+                    font-size: 16px;
+                }
+                
+                #chatSendBtn, #chatAttachBtn, #chatVoiceBtn {
+                    min-width: 48px;
+                    min-height: 48px;
+                    padding: 12px;
+                }
+            }
+            
+            /* Feedback status */
+            #chatFeedback {
+                display: none;
+                text-align: center;
+                padding: 8px;
+                margin-bottom: 10px;
+                background: #e3f2fd;
+                border-radius: 8px;
+                font-size: 13px;
+                color: #1976d2;
+            }
+            
+            #chatFeedback.show {
+                display: block;
+            }
+            
+            #chatFeedback.success {
+                background: #e8f5e9;
+                color: #2e7d32;
+            }
+            
+            #chatFeedback.error {
+                background: #ffebee;
+                color: #c62828;
+            }
+            
+            .chat-hint {
+                font-size: 11px;
+                color: #999;
+                margin-top: 4px;
+                text-align: left;
+            }
         </style>
     </head>
     <body>
@@ -695,6 +745,10 @@ def console():
                 <!-- Chat UI -->
                 <div id="chatRoot">
                     <div id="chatError"></div>
+                    <div id="chatFeedback">
+                        <span id="chatFeedbackText"></span>
+                        <span id="chatFeedbackSpinner" class="loading" style="display: none;"></span>
+                    </div>
                     <div id="missionStatusDisplay" style="text-align: center; padding: 8px; font-size: 13px; color: #999;">未選択（最初の送信で自動作成されます）</div>
                     <div id="chatHistory">
                         <p style="color: #999; text-align: center;">ミッションを作成すると、ここにチャット履歴が表示されます</p>
@@ -704,7 +758,10 @@ def console():
                         <button id="chatAttachBtn" type="button">📎</button>
                         <input id="chatFileInput" type="file" multiple accept=".pdf,.txt,.md,.json,.png,.jpg,.jpeg" style="display: none;" />
                         <button id="chatVoiceBtn" type="button" title="音声入力">🎤</button>
-                        <textarea id="chatMessageInput" placeholder="メッセージを入力..."></textarea>
+                        <div style="flex: 1; display: flex; flex-direction: column;">
+                            <textarea id="chatMessageInput" placeholder="メッセージを入力..."></textarea>
+                            <div class="chat-hint">Enter: 改行 / ⌘+Enter (Mac) or Ctrl+Enter (Win): 送信</div>
+                        </div>
                         <button id="chatSendBtn">送信</button>
                     </div>
                 </div>
@@ -933,6 +990,9 @@ def console():
                 sendBtn.disabled = true;
                 sendBtn.textContent = '送信中...';
                 
+                // Show feedback: 受付中
+                showFeedback('受付中...', 'loading');
+                
                 try {
                     // Auto-create mission if not exists
                     if (!currentMissionId) {
@@ -985,6 +1045,8 @@ def console():
                     
                     // Clear input and attachments
                     input.value = '';
+                    // Reset textarea height
+                    input.style.height = 'auto';
                     pendingAttachments = [];
                     renderPendingAttachments();
                     
@@ -992,9 +1054,14 @@ def console():
                     await loadMessages();
                     hideError();
                     
+                    // Show success feedback
+                    showFeedback('送信完了 \u2713', 'success');
+                    feedbackTimeoutId = setTimeout(hideFeedback, 2000);
+                    
                 } catch (error) {
                     console.error('Failed to send message:', error);
                     showError('メッセージの送信に失敗しました: ' + error.message);
+                    hideFeedback();
                 } finally {
                     sendBtn.disabled = false;
                     sendBtn.textContent = '送信';
@@ -1021,15 +1088,59 @@ def console():
                 errorDiv.classList.remove('show');
             }
             
+            let feedbackTimeoutId = null;
+            
+            function showFeedback(message, status = 'info') {
+                const feedbackDiv = document.getElementById('chatFeedback');
+                const textSpan = document.getElementById('chatFeedbackText');
+                const spinnerSpan = document.getElementById('chatFeedbackSpinner');
+                
+                // Clear previous timeout
+                if (feedbackTimeoutId) {
+                    clearTimeout(feedbackTimeoutId);
+                    feedbackTimeoutId = null;
+                }
+                
+                textSpan.textContent = message;
+                feedbackDiv.className = 'show';
+                
+                if (status === 'loading') {
+                    spinnerSpan.style.display = 'inline-block';
+                } else {
+                    spinnerSpan.style.display = 'none';
+                    feedbackDiv.classList.add(status);
+                }
+            }
+            
+            function hideFeedback() {
+                const feedbackDiv = document.getElementById('chatFeedback');
+                feedbackDiv.className = '';
+            }
+            
             // Chat send button
             document.getElementById('chatSendBtn').addEventListener('click', sendMessage);
             
-            // Enter to send (Shift+Enter for newline)
+            // Enter for newline, Cmd/Ctrl+Enter to send
             document.getElementById('chatMessageInput').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+                // Ignore if IME is composing
+                if (e.isComposing) {
+                    return;
+                }
+                
+                // Cmd/Ctrl+Enter to send
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
                     e.preventDefault();
                     sendMessage();
                 }
+                // Enter alone = newline (default behavior)
+            });
+            
+            // Auto-grow textarea
+            const chatInputElement = document.getElementById('chatMessageInput');
+            chatInputElement.addEventListener('input', () => {
+                chatInputElement.style.height = 'auto';
+                const newHeight = Math.min(chatInputElement.scrollHeight, 200);
+                chatInputElement.style.height = newHeight + 'px';
             });
             
             // Attach button

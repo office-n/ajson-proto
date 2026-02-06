@@ -32,8 +32,8 @@
 
 ### P2: Code Quality & Testing
 
-- [x] Phase8 Hands: 失敗テストケース修正（approval_required_when_not_dry_run、commit 67e4a02）
-- [ ] Phase8 Hands: BrowserPilot skeleton追加（DRY_RUNのみ）
+- [x] Phase8 Hands: 失敗テストケース修正（approval_required_when_not_dry_run、commit 8b3af96）
+- [x] Phase8 Hands: BrowserPilot skeleton追加（DRY_RUNのみ、commit c77618b）
 - [ ] E2E test追加（Console UI: composer拡大、🧾トレース）
 - [ ] Coverage測定とバッジ追加
 

@@ -12,7 +12,7 @@ echo "Timestamp: $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 echo ""
 
 # Exclude patterns
-EXCLUDE_DIRS="--exclude-dir=.git --exclude-dir=venv --exclude-dir=__pycache__ --exclude-dir=node_modules"
+EXCLUDE_DIRS="--exclude-dir=.git --exclude-dir=venv --exclude-dir=__pycache__ --exclude-dir=node_modules --exclude-dir=docs"
 EXCLUDE_FILES="--exclude=*.pyc --exclude=*.log"
 
 # Violation counter

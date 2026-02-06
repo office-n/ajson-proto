@@ -382,11 +382,13 @@ def console():
             }
             
             #chatHistory {
-                max-height: 400px;
+                max-height: calc(100vh - 420px);
+                min-height: 200px;
                 overflow-y: auto;
                 border: 2px solid #e0e0e0;
                 border-radius: 8px;
                 padding: 15px;
+                padding-bottom: 180px; /* Reserve space for composer */
                 margin-bottom: 15px;
                 background: #f9f9f9;
             }
@@ -435,9 +437,17 @@ def console():
             }
             
             #chatInputBar {
+                position: sticky;
+                bottom: 0;
                 display: flex;
                 gap: 10px;
                 align-items: flex-end;
+                background: white;
+                padding: 15px;
+                padding-bottom: max(15px, env(safe-area-inset-bottom));
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                border-radius: 8px;
+                z-index: 100;
             }
             
             #chatMessageInput {
@@ -448,7 +458,8 @@ def console():
                 font-size: 14px;
                 font-family: inherit;
                 resize: vertical;
-                min-height: 50px;
+                min-height: clamp(100px, 20vh, 150px);
+                max-height: min(300px, 40vh);
             }
             
             #chatMessageInput:focus {
@@ -564,6 +575,83 @@ def console():
             
             #chatError.show {
                 display: block;
+            }
+            
+            /* Trace button (P2) */
+            .trace-btn {
+                background: transparent;
+                border: none;
+                color: #999;
+                font-size: 14px;
+                cursor: pointer;
+                padding: 2px 4px;
+                margin-left: 6px;
+                transition: color 0.2s;
+            }
+            
+            .trace-btn:hover {
+                color: #667eea;
+            }
+            
+           /* Trace modal (P2) */
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 1000;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .modal.show {
+                display: flex;
+            }
+            
+            .modal-content {
+                background: white;
+                border-radius: 12px;
+                padding: 30px;
+                max-width: 600px;
+                max-height: 80vh;
+                overflow-y: auto;
+                position: relative;
+            }
+            
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            
+            .modal-close {
+                background: #f5f5f5;
+                border: none;
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                font-size: 20px;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            
+            .modal-close:hover {
+                background: #ececec;
+            }
+            
+            .trace-content {
+                font-family: monospace;
+                font-size: 12px;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                background: #f9f9f9;
+                padding: 15px;
+                border-radius: 8px;
+                border: 1px solid #e0e0e0;
             }
             
             /* Legacy UI Styles */
@@ -709,6 +797,17 @@ def console():
                     </div>
                 </div>
                 
+                <!-- Trace Modal (P2) -->
+                <div id="traceModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>🧾 Trace詳細</h3>
+                            <button class="modal-close" onclick="hideTraceModal()">✕</button>
+                        </div>
+                        <div id="traceContent" class="trace-content"></div>
+                    </div>
+                </div>
+                
                 <!-- Legacy Form UI (collapsed) -->
                 <details>
                     <summary>詳細設定（従来UI）</summary>
@@ -815,8 +914,7 @@ def console():
                     const role = msg.role || 'system';
                     const content = msg.content || '';
                     const time = msg.created_at || '';
-                    
-                    // Render attachments if present
+                                        // Render attachments if present
                     let attachmentsHtml = '';
                     if (msg.attachments_json) {
                         let attachments = [];
@@ -842,9 +940,12 @@ def console():
                         }
                     }
                     
+                    // Add trace icon (P2)
+                    const traceIcon = `<button class="trace-btn" onclick="showTrace(${msg.id})" title="Trace表示">🧾</button>`;
+                    
                     return `
                         <div class="chat-message ${role}">
-                            <div class="chat-role">${role}</div>
+                            <div class="chat-role">${role} ${traceIcon}</div>
                             <div class="chat-content">${escapeHtml(content)}</div>
                             ${attachmentsHtml}
                             ${time ? `<div class="chat-time">${time}</div>` : ''}
@@ -985,6 +1086,7 @@ def console():
                     
                     // Clear input and attachments
                     input.value = '';
+                    input.style.height = ''; // Reset textarea height
                     pendingAttachments = [];
                     renderPendingAttachments();
                     
@@ -1375,6 +1477,34 @@ def console():
                     alert('承認処理エラー: ' + error.message);
                 }
             }
+            
+            // Trace modal functions (P2)
+            async function showTrace(messageId) {
+                const modal = document.getElementById('traceModal');
+                const traceContent = document.getElementById('traceContent');
+                
+                traceContent.textContent = 'Loading trace...';
+                modal.classList.add('show');
+                
+                // For MVP: show placeholder (no actual trace API yet)
+                // In future: fetch(`/missions/${currentMissionId}/messages/${messageId}/trace`)
+                setTimeout(() => {
+                    traceContent.textContent = `Trace for message #${messageId}\n\nStatus: トレース未実装\n\n理由: Phase 3 Lite では最小導線のみ実装。\n実際のトレース取得APIは今後実装予定。\n\n（DRY_RUN想定のため、LLM呼び出しトレースは存在しません）`;
+                }, 100);
+            }
+            
+            function hideTraceModal() {
+                const modal = document.getElementById('traceModal');
+                modal.classList.remove('show');
+            }
+            
+            // Close modal on click outside
+            document.addEventListener('click', (e) => {
+                const modal = document.getElementById('traceModal');
+                if (e.target === modal) {
+                    hideTraceModal();
+                }
+            });
         </script>
     </body>
     </html>

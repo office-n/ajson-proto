@@ -382,11 +382,13 @@ def console():
             }
             
             #chatHistory {
-                max-height: 400px;
+                max-height: calc(100vh - 420px);
+                min-height: 200px;
                 overflow-y: auto;
                 border: 2px solid #e0e0e0;
                 border-radius: 8px;
                 padding: 15px;
+                padding-bottom: 180px; /* Reserve space for composer */
                 margin-bottom: 15px;
                 background: #f9f9f9;
             }
@@ -435,9 +437,17 @@ def console():
             }
             
             #chatInputBar {
+                position: sticky;
+                bottom: 0;
                 display: flex;
                 gap: 10px;
                 align-items: flex-end;
+                background: white;
+                padding: 15px;
+                padding-bottom: max(15px, env(safe-area-inset-bottom));
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+                border-radius: 8px;
+                z-index: 100;
             }
             
             #chatMessageInput {
@@ -448,7 +458,8 @@ def console():
                 font-size: 14px;
                 font-family: inherit;
                 resize: vertical;
-                min-height: 50px;
+                min-height: clamp(100px, 20vh, 150px);
+                max-height: min(300px, 40vh);
             }
             
             #chatMessageInput:focus {

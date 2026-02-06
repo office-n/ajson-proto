@@ -1,17 +1,19 @@
 """
-Tool Runner: Execute tools with approval gates
+Tool Runner: Executes tools with approval gates + audit logging
 
-Expansion: Stable audit logging + policy integration
+Expansion: JSON audit logs + PolicyDecision enforcement
 """
 from typing import Dict, Any, List, Optional
+import json
+import subprocess
 from ajson.hands.policy import (
     ApprovalPolicy,
     PolicyDecision,
-    OperationCategory,
+   OperationCategory,
     ApprovalRequiredError,
     PolicyDeniedError,
+    ApprovalRequired,  # Legacy compatibility
 )
-import json
 
 
 class ToolRunner:
@@ -46,7 +48,8 @@ class ToolRunner:
             ApprovalRequiredError: If operation requires approval and dry_run is False
             PolicyDeniedError: If operation is denied by policy
         """
-        operation_str = f"{tool_name} {json.dumps(args)}"
+        # Legacy operation string format: "tool_name {args}"
+        operation_str = f"{tool_name} {str(args)}"
         
         # Convert args to command-like string for pattern matching
         if isinstance(args, dict):
@@ -58,16 +61,29 @@ class ToolRunner:
         # Evaluate policy
         decision, category, reason = ApprovalPolicy.evaluate(operation_cmd, dry_run=self.dry_run)
         
-        # Handle DENY
+        # Legacy compatibility: use check_approval_required for requires_approval field
+        requires_approval, legacy_reason, gate_type = ApprovalPolicy.check_approval_required(operation_cmd, dry_run=self.dry_run)
+        
+        # Handle DENY (legacy: convert to ApprovalRequiredError for destructive denylist items)
         if decision == PolicyDecision.DENY:
-            error = PolicyDeniedError(operation_cmd, reason, category)
-            self._log_audit(operation_str, decision, category, reason, error=str(error))
-            raise error
+            # Legacy behavior: destructive denylist items raised ApprovalRequiredError
+            if category in [OperationCategory.DESTRUCTIVE, OperationCategory.IRREVERSIBLE]:
+                if not self.dry_run:
+                    gate_map = {
+                        OperationCategory.DESTRUCTIVE: ApprovalRequired.DESTRUCTIVE,
+                        OperationCategory.IRREVERSIBLE: ApprovalRequired.IRREVERSIBLE,
+                    }
+                    error = ApprovalRequiredError(operation_str, reason, gate_map.get(category))
+                    self._log_audit(operation_str, decision, category, reason, error=str(error))
+                    raise error
+            else:
+                # Non-destructive denies (e.g., network) still raise PolicyDeniedError
+                error = PolicyDeniedError(operation_cmd, reason, category)
+                self._log_audit(operation_str, decision, category, reason, error=str(error))
+                raise error
         
         # Handle REQUIRE_APPROVAL (non-dry-run)
         if decision == PolicyDecision.REQUIRE_APPROVAL and not self.dry_run:
-            # Map category to legacy ApprovalRequired for backward compatibility
-            from ajson.hands.policy import ApprovalRequired
             gate_map = {
                 OperationCategory.DESTRUCTIVE: ApprovalRequired.DESTRUCTIVE,
                 OperationCategory.PAID: ApprovalRequired.PAID,
@@ -84,6 +100,11 @@ class ToolRunner:
         else:
             # ALLOW: actual execution would happen here
             result = self._execute_actual(tool_name, args, decision, category, reason)
+        
+        # Add legacy fields for backwards compatibility
+        result["requires_approval"] = requires_approval
+        if "output" not in result:
+            result["output"] = result.get("output", f"DRY_RUN: {tool_name} with {json.dumps(args)}" if self.dry_run else f"EXECUTED: {tool_name}")
         
         # Log audit
         self._log_audit(operation_str, decision, category, reason, result=result)

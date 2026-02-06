@@ -220,6 +220,14 @@ class BrowserPilot:
             "status": "simulated" if self.dry_run else "executed"
         }
         
+        # Add top-level keys for backwards compatibility
+        if "url" in step.params:
+            result["url"] = self._mask_secrets_in_params({"url": step.params["url"]})["url"]
+        if "selector" in step.params:
+            result["selector"] = step.params["selector"]
+        if "text" in step.params:
+            result["text"] = self._mask_secrets_in_params({"text": step.params["text"]})["text"]
+        
         self.audit_log.append(result)
         return result
     
@@ -230,3 +238,23 @@ class BrowserPilot:
     def get_audit_log_json(self) -> str:
         """Get audit log as JSON"""
         return json.dumps(self.audit_log, indent=2)
+    
+    def _mask_secrets(self, text: str) -> str:
+        """
+        Legacy alias for secret masking (string input)
+        
+        Args:
+            text: Text to mask
+            
+        Returns:
+            Masked text
+        """
+        import re
+        
+        # Mask API keys
+        text = re.sub(r'sk-[A-Za-z0-9]{20,}', 'sk-***MASKED***', text)
+        text = re.sub(r'AIza[0-9A-Za-z\-_]{20,}', 'AIza***MASKED***', text)
+        # Mask passwords
+        text = re.sub(r'password=[^\s&]+', 'password=***MASKED***', text, flags=re.IGNORECASE)
+        
+        return text

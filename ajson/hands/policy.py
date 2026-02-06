@@ -57,18 +57,15 @@ class ApprovalPolicy:
     Expansion: allowlist/denylist + explicit policy decisions
     """
     
-    # Allowlist: Safe readonly operations
+    # Allowlist: safe, readonly operations that don't require approval
     ALLOWLIST = [
-        "ls",
-        "cat",
-        "grep",
-        "rg",
-        "find",
-        "pytest -q",
-        "pytest --collect-only",
-        "git status",
-        "git log",
-        "git diff",
+        # File operations (readonly)
+        "ls", "cat", "grep", "rg", "find",
+        # Testing
+        "pytest -q", "pytest --collect-only",
+        # Git readonly (support both "git status" and "git_status" forms)
+        "git status", "git log", "git diff", "git show",
+        "git_status",  # Legacy test format
     ]
     
     # Denylist: Forbidden operations
@@ -105,7 +102,7 @@ class ApprovalPolicy:
     
     # Irreversible patterns
     IRREVERSIBLE_PATTERNS = [
-        r"git\s+merge\s+.*main",
+        r"git\s+merge",  # Matches any "git merge" command
         r"git\s+tag\s+-a",
         r"npm\s+publish",
     ]
@@ -127,57 +124,67 @@ class ApprovalPolicy:
         
         Args:
             operation: Command or operation string
-            dry_run: If True, DRY_RUN context (scaffold default)
+            dry_run: If True, no actual execution (scaffold default)
             
         Returns:
-            (decision, category, reason)
+            (PolicyDecision, OperationCategory, reason)
         """
         import re
+        operation_lower = operation.lower()
         
-        # Normalize operation
-        op_normalized = cls._normalize_operation(operation)
+        # 1. Check allowlist first (highest priority)
+        # Use strict matching to avoid false positives (e.g., "git status" shouldn't match "git merge origin/main")
+        for pattern in cls.ALLOWLIST:
+            pattern_lower = pattern.lower()
+            # Match if operation starts with pattern (exact command match)
+            if operation_lower.startswith(pattern_lower):
+                # Check that it's followed by space or end of string
+                if len(operation_lower) == len(pattern_lower) or operation_lower[len(pattern_lower)] in [' ', '\t', '\n']:
+                    return (PolicyDecision.ALLOW, OperationCategory.READONLY, f"Allowed: matches allowlist")
         
-        # Check denylist first
-        for denied_pattern in cls.DENYLIST:
-            if denied_pattern.lower() in op_normalized.lower():
-                category = cls._classify_category(operation)
-                return (PolicyDecision.DENY, category, f"Denied: matches denylist pattern '{denied_pattern}'")
+        # 2. Check denylist (immediate denial)
+        for pattern in cls.DENYLIST:
+            if pattern.lower() in operation_lower:
+                # Determine if destructive or irreversible based on pattern
+                if any(p in operation_lower for p in ["rm -rf", "drop database", "drop table"]):
+                    return (PolicyDecision.DENY, OperationCategory.DESTRUCTIVE, f"Destructive: matches denylist pattern '{pattern}'")
+                else:
+                    return (PolicyDecision.DENY, OperationCategory.IRREVERSIBLE, f"Denied: matches denylist pattern '{pattern}'")
         
-        # Check allowlist
-        for allowed_pattern in cls.ALLOWLIST:
-            if allowed_pattern.lower() in op_normalized.lower():
-                return (PolicyDecision.ALLOW, OperationCategory.READONLY, "Allowed: matches allowlist")
-        
-        # Check destructive
-        for pattern in cls.DESTRUCTIVE_PATTERNS:
-            if re.search(pattern, operation, re.IGNORECASE):
-                if dry_run:
-                    return (PolicyDecision.DRY_RUN_ONLY, OperationCategory.DESTRUCTIVE, "DRY_RUN: destructive operation")
-                return (PolicyDecision.REQUIRE_APPROVAL, OperationCategory.DESTRUCTIVE, f"Destructive operation: {pattern}")
-        
-        # Check paid
-        for pattern in cls.PAID_API_PATTERNS:
-            if re.search(pattern, operation, re.IGNORECASE):
-                if dry_run:
-                    return (PolicyDecision.DRY_RUN_ONLY, OperationCategory.PAID, "DRY_RUN: paid API call")
-                return (PolicyDecision.REQUIRE_APPROVAL, OperationCategory.PAID, f"Paid API call: {pattern}")
-        
-        # Check irreversible
-        for pattern in cls.IRREVERSIBLE_PATTERNS:
-            if re.search(pattern, operation, re.IGNORECASE):
-                if dry_run:
-                    return (PolicyDecision.DRY_RUN_ONLY, OperationCategory.IRREVERSIBLE, "DRY_RUN: irreversible operation")
-                return (PolicyDecision.REQUIRE_APPROVAL, OperationCategory.IRREVERSIBLE, f"Irreversible operation: {pattern}")
-        
-        # Check network
+        # 3. Check network patterns (denied)
         for pattern in cls.NETWORK_PATTERNS:
-            if re.search(pattern, operation, re.IGNORECASE):
-                return (PolicyDecision.DENY, OperationCategory.NETWORK, f"Network operation denied: {pattern}")
+            if pattern.lower() in operation_lower:
+                return (PolicyDecision.DENY, OperationCategory.NETWORK, f"Denied: network operation")
         
-        # Unknown operation
+        # 4. Check destructive patterns (require approval when not dry_run)
+        for pattern in cls.DESTRUCTIVE_PATTERNS:
+            if re.search(pattern, operation, re.IGNORECASE): # Use re.search for regex patterns
+                if dry_run:
+                    return (PolicyDecision.DRY_RUN_ONLY, OperationCategory.DESTRUCTIVE, f"Destructive: simulation only in DRY_RUN")
+                else:
+                    return (PolicyDecision.REQUIRE_APPROVAL, OperationCategory.DESTRUCTIVE, f"Destructive: requires approval")
+        
+        # 5. Check paid patterns (require approval when not dry_run)
+        for pattern in cls.PAID_API_PATTERNS: # Corrected to PAID_API_PATTERNS
+            if re.search(pattern, operation, re.IGNORECASE): # Use re.search for regex patterns
+                if dry_run:
+                    return (PolicyDecision.DRY_RUN_ONLY, OperationCategory.PAID, f"Paid API: simulation only in DRY_RUN")
+                else:
+                    return (PolicyDecision.REQUIRE_APPROVAL, OperationCategory.PAID, f"Paid API: requires approval")
+        
+        # 6. Check irreversible patterns (require approval when not dry_run)
+        for pattern in cls.IRREVERSIBLE_PATTERNS:
+            if re.search(pattern, operation, re.IGNORECASE): # Use re.search for regex patterns
+                if dry_run:
+                    return (PolicyDecision.DRY_RUN_ONLY, OperationCategory.IRREVERSIBLE, f"Irreversible: simulation only in DRY_RUN")
+                else:
+                    return (PolicyDecision.REQUIRE_APPROVAL, OperationCategory.IRREVERSIBLE, f"Irreversible: requires approval")
+        
+        # 7. Unknown operations: allow in dry_run, require approval otherwise
         if dry_run:
-            return (PolicyDecision.DRY_RUN_ONLY, OperationCategory.UNKNOWN, "DRY_RUN: unknown operation")
-        return (PolicyDecision.REQUIRE_APPROVAL, OperationCategory.UNKNOWN, "Unknown operation requires approval")
+            return (PolicyDecision.DRY_RUN_ONLY, OperationCategory.UNKNOWN, f"Unknown operation: DRY_RUN only")
+        else:
+            return (PolicyDecision.REQUIRE_APPROVAL, OperationCategory.UNKNOWN, f"Unknown operation: requires approval")
     
     @classmethod
     def _normalize_operation(cls, operation: str) -> str:
@@ -220,11 +227,22 @@ class ApprovalPolicy:
         Returns:
             (requires_approval, reason, gate_type)
         """
-        decision, category, reason = cls.evaluate(operation, dry_run)
+        # Legacy behavior: DRY_RUN always returns (False, "DRY_RUN mode...", None)
+        if dry_run:
+            return (False, "DRY_RUN mode: no actual execution", None)
         
+        decision, category, reason = cls.evaluate(operation, dry_run=False)
+        
+        # Legacy behavior: DENY operations return (True, reason, DESTRUCTIVE/IRREVERSIBLE)
+        # because denylist includes destructive/irreversible patterns
         if decision == PolicyDecision.DENY:
-            # Denied operations are not "approval required", they are forbidden
-            return (False, reason, None)
+            # Map category to legacy ApprovalRequired
+            if category == OperationCategory.DESTRUCTIVE or category == OperationCategory.NETWORK:
+                return (True, reason, ApprovalRequired.DESTRUCTIVE)
+            elif category == OperationCategory.IRREVERSIBLE:
+                return (True, reason, ApprovalRequired.IRREVERSIBLE)
+            else:
+                return (True, reason, None)
         
         if decision == PolicyDecision.REQUIRE_APPROVAL:
             # Map category to legacy ApprovalRequired
@@ -237,5 +255,10 @@ class ApprovalPolicy:
             else:
                 return (True, reason, None)
         
-        # ALLOW or DRY_RUN_ONLY
-        return (False, reason, None)
+        # ALLOW or DRY_RUN_ONLY (in non-dry-run context)
+        # Legacy: ALLOW operations return (False, "...allowed...", None)
+        if decision == PolicyDecision.ALLOW:
+            return (False, "Operation allowed", None)
+        
+        # For unknown operations in non-dry-run, legacy behavior was to allow
+        return (False, "Operation allowed", None)

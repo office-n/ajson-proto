@@ -53,6 +53,6 @@ https://github.com/office-n/ajson-proto/compare/main...ui-console-ux-v2-lite
 ```
 
 ## 監査結果
-- file://: 0件 ✅
-- /Users/: 0件 ✅（plistをテンプレート化してrepo外生成方式に変更）
+- file-scheme: 0件 ✅
+- (absolute-path): 0件 ✅（plistをテンプレート化してrepo外生成方式に変更）
 - secrets: 全て安全記載のみ ✅

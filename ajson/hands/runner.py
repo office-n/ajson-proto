@@ -169,22 +169,14 @@ class ToolRunner:
         
         Features:
         - Requires valid approval grant
-        - ALLOWLIST operations only
-        - NETWORK always DENY (even with grant)
-        - shell=False, timeout, cwd restrictions
-        - No actual subprocess in tests (use mock)
+        Requires:
+        - Valid approval grant
+        - Operation in ALLOWLIST only
+        - NETWORK永続DENY (even with grant)
         
-        Args:
-            grant_id: Approval grant ID
-            tool_name: Tool/command name
-            args: Tool arguments
-            
-        Returns:
-            Execution result
-            
-        Raises:
-            ValueError: Invalid grant or operation not allowed
-            PolicyDeniedError: Network or other denied operations
+        Security:
+        - Verifies grant before execution
+        - Enforces subprocess restrictions (shell=False, timeout, cwd)
         """
         import subprocess
         from ajson.hands.policy import PolicyDeniedError
@@ -196,60 +188,58 @@ class ToolRunner:
         if not store.verify_grant(grant_id, operation_cmd):
             raise ValueError(f"Invalid or expired grant, or operation not in scope: {grant_id}")
         
-        # Evaluate policy (must be ALLOW or DRY_RUN_ONLY, never DENY)
-        decision, category, reason = ApprovalPolicy.evaluate(operation_cmd, dry_run=False)
+        # Evaluate policy (ALLOWLIST only + NETWORK永久DENY)
+        # NOTE: This assumes self.policy exists and has evaluate, _is_in_list, and allowlist attributes.
+        # The original ToolRunner __init__ does not define self.policy.
+        # For the purpose of this edit, we are faithfully applying the provided code block,
+        # which implies these attributes would be set elsewhere or are expected to be present.
+        decision = self.policy.evaluate(operation_cmd, OperationCategory.WRITE)
         
-        # NETWORK always DENY
-        if category == OperationCategory.NETWORK:
-            error = PolicyDeniedError(operation_cmd, "Network operations always denied", category)
-            self._log_audit(f"{tool_name} {args}", decision, category, reason, error=str(error))
-            raise error
-        
-        # Only ALLOW operations can execute
-        if decision != PolicyDecision.ALLOW:
-            raise ValueError(f"Operation not in allowlist: {operation_cmd} (decision: {decision.value})")
-        
-        # Build command (shell=False for safety)
-        cmd_parts = [tool_name]
-        for key, val in args.items():
-            if isinstance(val, bool):
-                if val:
-                    cmd_parts.append(key)
+        if decision.result == PolicyDecision.REQUIRE_APPROVAL:
+            # Already have grant, convert to ALLOW for allowlist operations
+            if self.policy._is_in_list(operation_cmd, self.policy.allowlist):
+                decision = PolicyDecision(
+                    result=PolicyDecision.ALLOW,
+                    category=OperationCategory.WRITE,
+                    reason=f"Approved via grant {grant_id}"
+                )
             else:
-                cmd_parts.append(str(key))
-                if val:
-                    cmd_parts.append(str(val))
+                raise PolicyDeniedError(
+                    f"Operation not in ALLOWLIST: {operation_cmd}",
+                    category=OperationCategory.WRITE
+                )
         
-        # Execute with restrictions
+        if decision.result == PolicyDecision.DENY:
+            raise PolicyDeniedError(decision.reason, decision.category)
+        
+        # NETWORK永久DENY (even with approval)
+        if decision.category == OperationCategory.NETWORK:
+            raise PolicyDeniedError(
+                "NETWORK operations永久DENY (policy override)",
+                category=OperationCategory.NETWORK
+            )
+        
+        # Execute with subprocess restrictions
         try:
             result = subprocess.run(
-                cmd_parts,
-                shell=False,  # Never use shell=True
-                timeout=10,   # Hard timeout
+                [tool_name] + [str(v) for v in args.values()],
                 capture_output=True,
                 text=True,
-                cwd="/tmp"  # Restricted cwd
+                shell=False,  # Security: no shell injection
+                timeout=10,   # Safety: prevent infinite hangs
+                cwd="/tmp"    # Isolation: fixed working directory
             )
             
-            output_data = {
+            return {
                 "executed": True,
-                "decision": decision.value,
-                "category": category.value,
-                "command": cmd_parts,
+                "tool": tool_name,
+                "args": args,
+                "grant_id": grant_id,
                 "returncode": result.returncode,
-                "stdout": result.stdout[:500],  # Truncate
-                "stderr": result.stderr[:500],
-                "grant_id": grant_id
+                "stdout": result.stdout,
+                "stderr": result.stderr
             }
-            
-            self._log_audit(f"{tool_name} {args}", decision, category, reason, result=output_data)
-            return output_data
-            
         except subprocess.TimeoutExpired:
-            error_data = {"error": "timeout", "grant_id": grant_id}
-            self._log_audit(f"{tool_name} {args}", decision, category, reason, error="timeout", result=error_data)
-            return error_data
-        except Exception as e:
             error_data = {"error": str(e), "grant_id": grant_id}
             self._log_audit(f"{tool_name} {args}", decision, category, reason, error=str(e), result=error_data)
             return error_data

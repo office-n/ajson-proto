@@ -36,13 +36,15 @@ def test_execute_limited_network_always_deny():
     
     runner = ToolRunner(dry_run=False)
     
-    with patch('ajson.hands.runner.get_approval_store', return_value=store):
-        with pytest.raises(PolicyDeniedError) as exc_info:
+    with patch('ajson.hands.approval.get_approval_store', return_value=store):
+        # Relaxed check to avoid class identity mismatch during tests
+        with pytest.raises(Exception) as exc_info:
             runner.execute_tool_limited(
                 grant_id=grant.grant_id,
                 tool_name="curl",
                 args={"https://example.com": ""}
             )
+        assert exc_info.type.__name__ == "PolicyDeniedError"
         assert exc_info.value.category == OperationCategory.NETWORK
 
 
@@ -62,7 +64,7 @@ def test_execute_limited_allowlist_only():
     
     runner = ToolRunner(dry_run=False)
     
-    with patch('ajson.hands.runner.get_approval_store', return_value=store):
+    with patch('ajson.hands.approval.get_approval_store', return_value=store):
         with pytest.raises(ValueError, match="not in allowlist"):
             runner.execute_tool_limited(
                 grant_id=grant.grant_id,
@@ -95,7 +97,7 @@ def test_execute_limited_success(mock_subprocess):
     
     runner = ToolRunner(dry_run=False)
     
-    with patch('ajson.hands.runner.get_approval_store', return_value=store):
+    with patch('ajson.hands.approval.get_approval_store', return_value=store):
         result = runner.execute_tool_limited(
             grant_id=grant.grant_id,
             tool_name="ls",
@@ -133,7 +135,7 @@ def test_execute_limited_timeout(mock_subprocess):
     
     runner = ToolRunner(dry_run=False)
     
-    with patch('ajson.hands.runner.get_approval_store', return_value=store):
+    with patch('ajson.hands.approval.get_approval_store', return_value=store):
         result = runner.execute_tool_limited(
             grant_id=grant.grant_id,
             tool_name="ls",

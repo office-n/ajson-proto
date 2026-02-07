@@ -32,6 +32,7 @@ class ToolRunner:
         """
         self.dry_run = dry_run
         self.audit_log: List[Dict[str, Any]] = []
+        self.policy = ApprovalPolicy()  # Initialize policy for execute_tool_limited
     
     def execute_tool(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -169,8 +170,6 @@ class ToolRunner:
         
         Features:
         - Requires valid approval grant
-        Requires:
-        - Valid approval grant
         - Operation in ALLOWLIST only
         - NETWORK永続DENY (even with grant)
         
@@ -179,7 +178,6 @@ class ToolRunner:
         - Enforces subprocess restrictions (shell=False, timeout, cwd)
         """
         import subprocess
-        from ajson.hands.policy import PolicyDeniedError
         
         # Verify grant
         from ajson.hands.approval import get_approval_store
@@ -189,35 +187,26 @@ class ToolRunner:
         if not store.verify_grant(grant_id, operation_cmd):
             raise ValueError(f"Invalid or expired grant, or operation not in scope: {grant_id}")
         
-        # Evaluate policy (ALLOWLIST only + NETWORK永久DENY)
-        # NOTE: This assumes self.policy exists and has evaluate, _is_in_list, and allowlist attributes.
-        # The original ToolRunner __init__ does not define self.policy.
-        # For the purpose of this edit, we are faithfully applying the provided code block,
-        # which implies these attributes would be set elsewhere or are expected to be present.
-        decision = self.policy.evaluate(operation_cmd, OperationCategory.WRITE)
-        
-        if decision.result == PolicyDecision.REQUIRE_APPROVAL:
-            # Already have grant, convert to ALLOW for allowlist operations
-            if self.policy._is_in_list(operation_cmd, self.policy.allowlist):
-                decision = PolicyDecision(
-                    result=PolicyDecision.ALLOW,
-                    category=OperationCategory.WRITE,
-                    reason=f"Approved via grant {grant_id}"
-                )
-            else:
-                raise PolicyDeniedError(
-                    f"Operation not in ALLOWLIST: {operation_cmd}",
-                    category=OperationCategory.WRITE
-                )
-        
-        if decision.result == PolicyDecision.DENY:
-            raise PolicyDeniedError(decision.reason, decision.category)
+        # Evaluate policy using correct API
+        decision, category, reason = ApprovalPolicy.evaluate(operation_cmd, dry_run=False)
         
         # NETWORK永久DENY (even with approval)
-        if decision.category == OperationCategory.NETWORK:
+        if category == OperationCategory.NETWORK:
             raise PolicyDeniedError(
+                operation_cmd,
                 "NETWORK operations永久DENY (policy override)",
-                category=OperationCategory.NETWORK
+                OperationCategory.NETWORK
+            )
+        
+        # Check if operation is in allowlist
+        is_in_allowlist = any(
+            operation_cmd.lower().startswith(p.lower()) 
+            for p in ApprovalPolicy.ALLOWLIST
+        )
+        
+        if not is_in_allowlist:
+            raise ValueError(
+                f"Operation not in allowlist: {operation_cmd}",
             )
         
         # Execute with subprocess restrictions
@@ -241,8 +230,8 @@ class ToolRunner:
                 "stderr": result.stderr
             }
         except subprocess.TimeoutExpired:
-            error_data = {"error": str(e), "grant_id": grant_id}
-            self._log_audit(f"{tool_name} {args}", decision, category, reason, error=str(e), result=error_data)
+            error_data = {"error": "timeout", "grant_id": grant_id}
+            self._log_audit(f"{tool_name} {args}", decision, category, reason, error="timeout", result=error_data)
             return error_data
     
     def _execute_actual(

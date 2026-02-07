@@ -1,7 +1,7 @@
 """
 API endpoints for approval queue management
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from datetime import datetime
@@ -13,6 +13,7 @@ from ajson.hands.approval import (
     ApprovalGrant,
     ApprovalStatus
 )
+from ajson.api.auth import verify_approval_auth
 
 router = APIRouter(prefix="/api/approvals", tags=["approvals"])
 
@@ -68,7 +69,11 @@ async def get_approval_request(request_id: str):
 
 
 @router.post("/{request_id}/approve", response_model=ApprovalGrantResponse)
-async def approve_request(request_id: str, decision_req: ApprovalDecisionRequest):
+async def approve_request(
+    request_id: str,
+    decision_req: ApprovalDecisionRequest,
+    _auth: bool = Depends(verify_approval_auth)
+):
     """Approve an approval request and create grant"""
     if decision_req.decision.lower() != "approve":
         raise HTTPException(status_code=400, detail="Decision must be 'approve'")
@@ -95,7 +100,11 @@ async def approve_request(request_id: str, decision_req: ApprovalDecisionRequest
 
 
 @router.post("/{request_id}/deny")
-async def deny_request(request_id: str, decision_req: ApprovalDecisionRequest):
+async def deny_request(
+    request_id: str,
+    decision_req: ApprovalDecisionRequest,
+    _auth: bool = Depends(verify_approval_auth)
+):
     """Deny an approval request"""
     if decision_req.decision.lower() != "deny":
         raise HTTPException(status_code=400, detail="Decision must be 'deny'")

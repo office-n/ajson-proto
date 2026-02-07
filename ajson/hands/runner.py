@@ -168,15 +168,11 @@ class ToolRunner:
         from ajson.hands.policy import PolicyDeniedError
         
         # Verify grant
-        try:
-            from ajson.hands.approval import get_approval_store
-            store = get_approval_store()
-            
-            operation_cmd = f"{tool_name} {args}"
-            if not store.verify_grant(grant_id, operation_cmd):
-                raise ValueError(f"Invalid or expired grant, or operation not in scope: {grant_id}")
-        except ImportError:
-            raise ValueError("Approval system not available")
+        store = get_approval_store()
+        
+        operation_cmd = f"{tool_name} {args}"
+        if not store.verify_grant(grant_id, operation_cmd):
+            raise ValueError(f"Invalid or expired grant, or operation not in scope: {grant_id}")
         
         # Evaluate policy (must be ALLOW or DRY_RUN_ONLY, never DENY)
         decision, category, reason = ApprovalPolicy.evaluate(operation_cmd, dry_run=False)

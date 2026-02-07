@@ -24,6 +24,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Include approval router
+try:
+    from ajson.api.approvals import router as approvals_router
+    app.include_router(approvals_router)
+except ImportError:
+    pass  # Approval API not available yet
+
 
 # Request models
 class ApprovalDecision(BaseModel):

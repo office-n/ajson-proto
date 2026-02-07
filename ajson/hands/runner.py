@@ -94,15 +94,37 @@ class ToolRunner:
         
         # Handle REQUIRE_APPROVAL (non-dry-run)
         if decision == PolicyDecision.REQUIRE_APPROVAL and not self.dry_run:
-            gate_map = {
-                OperationCategory.DESTRUCTIVE: ApprovalRequired.DESTRUCTIVE,
-                OperationCategory.PAID: ApprovalRequired.PAID,
-                OperationCategory.IRREVERSIBLE: ApprovalRequired.IRREVERSIBLE,
-            }
-            gate_type = gate_map.get(category, None)
-            error = ApprovalRequiredError(operation_str, reason, gate_type)
-            self._log_audit(operation_str, decision, category, reason, error=str(error))
-            raise error
+            # Create approval request
+            try:
+                from ajson.hands.approval import get_approval_store
+                store = get_approval_store()
+                approval_request = store.create_request(
+                    operation=operation_cmd,
+                    category=category.value,
+                    reason=reason,
+                    metadata={"tool_name": tool_name, "args": args}
+                )
+                # Include request_id in exception for client to track
+                gate_map = {
+                    OperationCategory.DESTRUCTIVE: ApprovalRequired.DESTRUCTIVE,
+                    OperationCategory.PAID: ApprovalRequired.PAID,
+                    OperationCategory.IRREVERSIBLE: ApprovalRequired.IRREVERSIBLE,
+                }
+                gate_type = gate_map.get(category, None)
+                error = ApprovalRequiredError(operation_str, f"{reason} (request_id: {approval_request.request_id})", gate_type)
+                self._log_audit(operation_str, decision, category, reason, error=str(error), result={"approval_request_id": approval_request.request_id})
+                raise error
+            except ImportError:
+                # Fallback if approval module not available
+                gate_map = {
+                    OperationCategory.DESTRUCTIVE: ApprovalRequired.DESTRUCTIVE,
+                    OperationCategory.PAID: ApprovalRequired.PAID,
+                    OperationCategory.IRREVERSIBLE: ApprovalRequired.IRREVERSIBLE,
+                }
+                gate_type = gate_map.get(category, None)
+                error = ApprovalRequiredError(operation_str, reason, gate_type)
+                self._log_audit(operation_str, decision, category, reason, error=str(error))
+                raise error
         
         # Execute (or simulate)
         if self.dry_run or decision == PolicyDecision.DRY_RUN_ONLY:

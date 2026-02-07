@@ -19,8 +19,10 @@ EXCLUDE_FILES="--exclude=*.pyc --exclude=*.log"
 VIOLATIONS=0
 
 # Check 1: file:// scheme (absolute file paths)
+# Pattern constructed dynamically to avoid self-detection
+PATTERN_FILE_SCHEME="file""://"
 echo "Check 1: file:// scheme"
-if grep -rIn "file://" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v "lint_forbidden_strings.sh"; then
+if grep -rIn "$PATTERN_FILE_SCHEME" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v "lint_forbidden_strings.sh"; then
     echo "❌ VIOLATION: file:// scheme found"
     VIOLATIONS=$((VIOLATIONS + 1))
 else
@@ -29,8 +31,11 @@ fi
 echo ""
 
 # Check 2: Absolute paths (/Users/, /home/)
+# Pattern constructed dynamically to avoid self-detection
+PATTERN_USERS="/""Users/"
+PATTERN_HOME="/""home/"
 echo "Check 2: Absolute paths"
-if grep -rIn "/Users/\|/home/" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v "lint_forbidden_strings.sh"; then
+if grep -rIn "$PATTERN_USERS\|$PATTERN_HOME" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v "lint_forbidden_strings.sh"; then
     echo "❌ VIOLATION: Absolute paths found"
     VIOLATIONS=$((VIOLATIONS + 1))
 else
@@ -68,8 +73,8 @@ else
     echo ""
     echo "Please fix the violations before committing."
     echo "Forbidden patterns:"
-    echo "  - file:// (use relative paths)"
-    echo "  - /Users/, /home/ (use relative paths or placeholders)"
-    echo "  - sk-*, AIza* (API keys, use environment variables or Keychain)"
+    echo "  - file-scheme URLs (use relative paths)"
+    echo "  - absolute local paths (use relative paths or placeholders)"
+    echo "  - API key patterns (use environment variables or Keychain)"
     exit 1
 fi

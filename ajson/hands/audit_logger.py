@@ -43,6 +43,12 @@ class AuditLogger:
         
         if not self.logger.handlers:
             self.logger.addHandler(handler)
+        else:
+            # Clear existing handlers to prevent duplication/leaks in tests
+            for h in self.logger.handlers[:]:
+                self.logger.removeHandler(h)
+                h.close()
+            self.logger.addHandler(handler)
     
     def _log(self, event_type: str, data: Dict[str, Any]):
         """Log audit event"""

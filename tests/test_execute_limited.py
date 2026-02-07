@@ -71,7 +71,7 @@ def test_execute_limited_allowlist_only():
             )
 
 
-@patch('subprocess.run')
+@patch('ajson.hands.runner.subprocess.run')
 def test_execute_limited_success(mock_subprocess):
     """Allowlist operation with grant should execute"""
     # Mock subprocess
@@ -113,7 +113,7 @@ def test_execute_limited_success(mock_subprocess):
     assert call_kwargs["timeout"] == 10
 
 
-@patch('subprocess.run')
+@patch('ajson.hands.runner.subprocess.run')
 def test_execute_limited_timeout(mock_subprocess):
     """Subprocess timeout should be handled"""
     import subprocess

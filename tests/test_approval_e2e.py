@@ -5,7 +5,7 @@ Tests the entire flow with network 0 (all external calls mocked)
 """
 import pytest
 from unittest.mock import Mock, patch
-from ajson.hands.approval import ApprovalStore, ApprovalDecision
+from ajson.hands.approval import ApprovalStore, ApprovalDecision, get_approval_store
 from ajson.hands.runner import ToolRunner
 from ajson.hands.policy import PolicyDecision, OperationCategory
 
@@ -27,7 +27,7 @@ def test_e2e_approval_to_execute_allowlist():
     
     # This should create an approval request
     try:
-        with patch('ajson.hands.runner.get_approval_store', return_value=store):
+        with patch('ajson.hands.approval.get_approval_store', return_value=store):
             runner.execute_tool("git", {"clone": "https://github.com/example/repo.git"})
     except Exception as e:
         # Should raise ApprovalRequiredError
@@ -60,7 +60,7 @@ def test_e2e_approval_to_execute_allowlist():
         mock_result.stderr = ""
         mock_subprocess.return_value = mock_result
         
-        with patch('ajson.hands.runner.get_approval_store', return_value=store):
+        with patch('ajson.hands.approval.get_approval_store', return_value=store):
             result = runner.execute_tool_limited(
                 grant_id=grant.grant_id,
                 tool_name="git",
@@ -102,12 +102,12 @@ def test_e2e_approval_network_deny():
     grant = store.approve_request(request.request_id, decision)
     assert grant is not None
     
-    # Attempt to execute → should DENY
+    # Attempt to execute → should  DENY
     runner = ToolRunner(dry_run=False)
     
     from ajson.hands.policy import PolicyDeniedError
     
-    with patch('ajson.hands.runner.get_approval_store', return_value=store):
+    with patch('ajson.hands.approval.get_approval_store', return_value=store):
         with pytest.raises(PolicyDeniedError) as exc_info:
             runner.execute_tool_limited(
                 grant_id=grant.grant_id,

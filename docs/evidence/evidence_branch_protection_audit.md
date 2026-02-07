@@ -1,35 +1,41 @@
 # Evidence: Branch Protection Audit
 
-**タイムスタンプ**: 2026-02-08T03:55:00+09:00（Asia/Tokyo）
+**タイムスタンプ**: 2026-02-08T04:55:00+09:00（Asia/Tokyo）
 
 ## 1. 監査対象
 - **Repo**: `office-n/ajson-proto`
 - **Branch**: `main`
-- **Method**: `gh api repos/:owner/:repo/branches/main/protection` (Read-only)
+- **Method**: `gh api repos/:owner/:repo/branches/main/protection`
 
 ## 2. 現状 (Current Status)
-**Status**: ❌ **UNPROTECTED** (404 Not Found)
 
-| Setting | Current Value | Risk |
+### 2026-02-08 04:55: **PROTECTED (Baseline Enforced)**
+**Status**: ✅ **PROTECTED** (HTTP 200 via `gh api`)
+
+| Setting | Value | Note |
 | :--- | :--- | :--- |
-| **Branch Protection** | **OFF** | 🚨 **High** |
-| Require PR | N/A | Direct push allowed |
-| Require Status Checks | N/A | CI failure ignored |
-| Allow Force Pushes | **Allowed** (Default) | History rewrite risk |
-| Allow Deletions | **Allowed** (Default) | Branch deletion risk |
+| **Branch Protection** | **ON** | Enforced via Settings |
+| Require PR | **ON** | Approvals: 1 |
+| Require Status Checks | **OFF** | To avoid guessing (Safety first) |
+| Include Administrators | **ON** | Enforced |
+| Allow Force Pushes | **OFF** | Blocked |
+| Allow Deletions | **OFF** | Blocked |
 
-## 3. 推奨設定 (Recommendations)
+### 2026-02-08 03:55: **UNPROTECTED (Audit Log)**
+*(Historical status at time of initial audit)*
+- Status: ❌ UNPROTECTED (404 Not Found)
+
+## 3. 変更内容 (Changes Applied)
 > [!IMPORTANT]
-> This audit provided **read-only** findings. No settings were changed.
-> To secure the branch, the following configuration is recommended.
+> Applied **Baseline** protection only.
+> **Required status checks** were intentionally skipped to comply with the "No Guessing" rule.
 
-- [ ] **Enable Branch Protection** for `main`
-- [ ] **Require a pull request before merging**
-  - [ ] Require approvals: 1
-- [ ] **Require status checks to pass**
-  - [ ] Search & Select: `lint` (found in `.github/workflows/lint.yml`)
-- [ ] **Include administrators** (Enforce rules for admins too)
-- [ ] **Restrict who can push** (Disable direct push)
+- [x] **Enable Branch Protection** for `main`
+- [x] **Require a pull request before merging**
+  - [x] Require approvals: 1
+- [ ] **Require status checks to pass** (Skipped)
+- [x] **Include administrators**
+- [x] **Restrict who can push** (Implicit in Protection ON)
 
 ## 4. 参照情報
-- Workflow: `.github/workflows/lint.yml` (Job: `lint`)
+- Workflow: `.github/workflows/lint.yml` (Available but not enforced yet)

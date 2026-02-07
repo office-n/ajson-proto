@@ -163,6 +163,97 @@ class ToolRunner:
             "output": f"DRY_RUN: {tool_name} with {json.dumps(args)}"
         }
     
+    def execute_tool_limited(self, grant_id: str, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute tool with approval grant (LIMITED mode)
+        
+        Features:
+        - Requires valid approval grant
+        - ALLOWLIST operations only
+        - NETWORK always DENY (even with grant)
+        - shell=False, timeout, cwd restrictions
+        - No actual subprocess in tests (use mock)
+        
+        Args:
+            grant_id: Approval grant ID
+            tool_name: Tool/command name
+            args: Tool arguments
+            
+        Returns:
+            Execution result
+            
+        Raises:
+            ValueError: Invalid grant or operation not allowed
+            PolicyDeniedError: Network or other denied operations
+        """
+        import subprocess
+        from ajson.hands.policy import PolicyDeniedError
+        
+        # Verify grant
+        store = get_approval_store()
+        
+        operation_cmd = f"{tool_name} {args}"
+        if not store.verify_grant(grant_id, operation_cmd):
+            raise ValueError(f"Invalid or expired grant, or operation not in scope: {grant_id}")
+        
+        # Evaluate policy (must be ALLOW or DRY_RUN_ONLY, never DENY)
+        decision, category, reason = ApprovalPolicy.evaluate(operation_cmd, dry_run=False)
+        
+        # NETWORK always DENY
+        if category == OperationCategory.NETWORK:
+            error = PolicyDeniedError(operation_cmd, "Network operations always denied", category)
+            self._log_audit(f"{tool_name} {args}", decision, category, reason, error=str(error))
+            raise error
+        
+        # Only ALLOW operations can execute
+        if decision != PolicyDecision.ALLOW:
+            raise ValueError(f"Operation not in allowlist: {operation_cmd} (decision: {decision.value})")
+        
+        # Build command (shell=False for safety)
+        cmd_parts = [tool_name]
+        for key, val in args.items():
+            if isinstance(val, bool):
+                if val:
+                    cmd_parts.append(key)
+            else:
+                cmd_parts.append(str(key))
+                if val:
+                    cmd_parts.append(str(val))
+        
+        # Execute with restrictions
+        try:
+            result = subprocess.run(
+                cmd_parts,
+                shell=False,  # Never use shell=True
+                timeout=10,   # Hard timeout
+                capture_output=True,
+                text=True,
+                cwd="/tmp"  # Restricted cwd
+            )
+            
+            output_data = {
+                "executed": True,
+                "decision": decision.value,
+                "category": category.value,
+                "command": cmd_parts,
+                "returncode": result.returncode,
+                "stdout": result.stdout[:500],  # Truncate
+                "stderr": result.stderr[:500],
+                "grant_id": grant_id
+            }
+            
+            self._log_audit(f"{tool_name} {args}", decision, category, reason, result=output_data)
+            return output_data
+            
+        except subprocess.TimeoutExpired:
+            error_data = {"error": "timeout", "grant_id": grant_id}
+            self._log_audit(f"{tool_name} {args}", decision, category, reason, error="timeout", result=error_data)
+            return error_data
+        except Exception as e:
+            error_data = {"error": str(e), "grant_id": grant_id}
+            self._log_audit(f"{tool_name} {args}", decision, category, reason, error=str(e), result=error_data)
+            return error_data
+    
     def _execute_actual(
         self,
         tool_name: str,

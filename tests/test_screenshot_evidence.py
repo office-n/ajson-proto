@@ -3,13 +3,14 @@ Tests for screenshot evidence utility
 """
 import pytest
 import tempfile
+import os
 from pathlib import Path
 from ajson.hands.screenshot_evidence import ScreenshotEvidence
 
 
 def test_screenshot_save_basic():
     """Save screenshot with dummy bytes"""
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
         evidence = ScreenshotEvidence(output_dir=tmpdir)
         
         # Dummy PNG header bytes
@@ -25,7 +26,7 @@ def test_screenshot_save_basic():
 
 def test_screenshot_auto_naming():
     """Screenshot auto-generates name with timestamp"""
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
         evidence = ScreenshotEvidence(output_dir=tmpdir)
         
         dummy_png = b'\x89PNG\r\n\x1a\n' + b'\x00' * 100
@@ -38,7 +39,7 @@ def test_screenshot_auto_naming():
 
 def test_screenshot_categories():
     """Screenshots saved in category subdirectories"""
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
         evidence = ScreenshotEvidence(output_dir=tmpdir)
         
         dummy_png = b'\x89PNG\r\n\x1a\n' + b'\x00' * 100
@@ -54,7 +55,7 @@ def test_screenshot_categories():
 
 def test_list_screenshots():
     """List all screenshots"""
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
         evidence = ScreenshotEvidence(output_dir=tmpdir)
         
         dummy_png = b'\x89PNG\r\n\x1a\n' + b'\x00' * 100
@@ -72,7 +73,7 @@ def test_list_screenshots():
 
 def test_get_screenshot_path():
     """Get path to specific screenshot"""
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
         evidence = ScreenshotEvidence(output_dir=tmpdir)
         
         dummy_png = b'\x89PNG\r\n\x1a\n' + b'\x00' * 100
@@ -90,7 +91,7 @@ def test_get_screenshot_path():
 
 def test_no_absolute_paths():
     """Verify no absolute paths are returned"""
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
         evidence = ScreenshotEvidence(output_dir=tmpdir)
         
         dummy_png = b'\x89PNG\r\n\x1a\n' + b'\x00' * 100
@@ -109,7 +110,7 @@ def test_no_absolute_paths():
 
 def test_directory_creation():
     """Evidence directory created if not exists"""
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=os.getcwd()) as tmpdir:
         # Use non-existent subdirectory
         evidence_dir = Path(tmpdir) / "new_evidence_dir"
         assert not evidence_dir.exists()

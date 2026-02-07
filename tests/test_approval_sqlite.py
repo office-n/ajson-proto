@@ -120,6 +120,9 @@ def test_persistence_across_instances():
 
 def test_env_var_activation():
     """get_approval_store respects APPROVAL_STORE_DB env var"""
+    import importlib
+    import ajson.hands.approval_sqlite
+    
     with tempfile.TemporaryDirectory() as tmpdir:
         db_path = os.path.join(tmpdir, "test.db")
         
@@ -127,6 +130,8 @@ def test_env_var_activation():
         os.environ['APPROVAL_STORE_DB'] = db_path
         
         try:
+            # Reload module to ensure env var is read fresh
+            importlib.reload(ajson.hands.approval_sqlite)
             from ajson.hands.approval_sqlite import get_approval_store
             store = get_approval_store()
             
@@ -134,6 +139,9 @@ def test_env_var_activation():
             assert store.db_path == db_path
         finally:
             del os.environ['APPROVAL_STORE_DB']
+            # Reload again to reset state
+            importlib.reload(ajson.hands.approval_sqlite)
+
 
 
 def test_fallback_to_in_memory():

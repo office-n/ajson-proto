@@ -44,7 +44,7 @@
 
 **禁止文字列検査**
 - `scripts/lint_forbidden_strings.sh`作成
-- 検査項目: `file://`、`/Users/`、APIキーパターン、force push
+- 検査項目: file-scheme URL、absolute local path、APIキーパターン、force push
 - GitHub Actions統合（`.github/workflows/lint.yml`）
 - pytest hook統合（`conftest.py`、全テスト前に自動Lint）
 

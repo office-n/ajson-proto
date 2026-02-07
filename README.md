@@ -49,6 +49,11 @@ http://localhost:8000/console
 pytest tests/ -v
 ```
 
+## 開発ワークフロー
+
+**重要**: main ブランチへの変更は必ずPR経由で行ってください。詳細は [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) を参照。
+
+
 ## プロジェクト構成
 
 ```

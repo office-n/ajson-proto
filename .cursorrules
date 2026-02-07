@@ -1,0 +1,47 @@
+# Ants Response Format Rule (SSOT)
+
+## 返答形式ルール
+
+**全ての返答において、以下の形式を遵守すること：**
+
+1. **平易な日本語での説明**（端的に）
+   - 実施内容や結果を簡潔に説明
+   - 専門用語は必要最小限に
+
+2. **マークダウンコードブロック**（必須）
+   - 説明の下に必ずコードブロック（```）で囲んだ詳細内容を提示
+   - コピーボタンが表示されるようにする
+   - 最終報告、証跡、実行結果などすべての重要な出力に適用
+
+## 例
+
+平易な説明文がここに入ります。実施した内容や結果を簡潔に記述します。
+
+```
+# 詳細内容
+
+ここにマークダウンコードブロックで囲んだ
+詳細な報告内容や実行結果を記載します。
+
+- リスト形式
+- 表形式
+- その他の構造化データ
+```
+
+## 適用範囲
+
+- 最終報告
+- 証跡レポート
+- コマンド実行結果
+- エラー報告
+- その他、ユーザーがコピーする可能性のある情報すべて
+
+# Evidence & Documentation Rules
+1. **No Local Links**: Never create clickable links to local files (e.g., `[file](file`+`:///...)` or `[file](/absolute/path)`).
+   - Use relative paths in backticks: `path/to/file`
+2. **No Absolute Paths**: Never use absolute paths in documentation or evidence.
+   - Use repo-relative paths: `tests/test_foo.py`
+3. **Evidence Style**: Follow `docs/EVIDENCE_STYLE.md` strictly.
+   - Status first.
+   - Plain summary + Code block log.
+4. **Forbidden Patterns**: `file`+`://` scheme is strictly prohibited.

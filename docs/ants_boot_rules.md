@@ -112,9 +112,9 @@
 - 形式（ISO 8601準拠）: `**タイムスタンプ**: YYYY-MM-DDTHH:MM:SS+09:00（Asia/Tokyo）`
 - 例: `**タイムスタンプ**: 2026-02-06T19:38:00+09:00（Asia/Tokyo）`
 - 禁止事項:
-  - `file://` 絶対パス混入禁止
+  - `file`+`://` 絶対パス混入禁止
   - APIキーなど機密情報の記載禁止
-- 検証方法: `grep -RIn "file://" evidence_*.md || true`（0件であること）
+- 検証方法: `grep -RIn "file"":""//" evidence_*.md || true`（0件であること）
 
 ---
 

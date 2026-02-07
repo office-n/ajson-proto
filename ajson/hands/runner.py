@@ -190,6 +190,7 @@ class ToolRunner:
         from ajson.hands.policy import PolicyDeniedError
         
         # Verify grant
+        from ajson.hands.approval import get_approval_store
         store = get_approval_store()
         
         operation_cmd = f"{tool_name} {args}"

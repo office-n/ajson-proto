@@ -26,6 +26,19 @@
 **問題**: 緊急でBranch Protection設定を変更した場合、復元を忘れるとセキュリティリスク
 **解決**: 設定変更→マージ→復元確認までを同一オペレーション内で完結させ、証跡に記録
 
+### L5: 必須承認にカウントされる権限要件
+**問題**: write 権限がないレビュアーの承認は「Reviewers without write access」扱いで、必須承認にカウントされない
+**解決**: 
+- レビュア候補には事前に write 以上の権限を付与
+- 承認後、PR UI で「X approving review**s** by reviewers with write access」表示を確認
+
+### L6: Required Check と一般 FAIL の判定
+**問題**: lint 等の CI check が FAIL でも、Required check でなければマージ可能（混乱の元）
+**解決**: 
+- Branch Protection 設定で「Require status checks to pass before merging」が ON かを確認
+- Required check リストに明記されていない check の FAIL は、マージを妨げない
+- 運用で「緑必須」か「Required のみ必須」かを明文化
+
 ---
 
 ## PR Merge Precheck SOP（Read-only手順）

@@ -6,4 +6,5 @@
 - scripts/
 - logs/boot/latest.md
 - logs/proof/latest.md
+- docs/
 - tickets/

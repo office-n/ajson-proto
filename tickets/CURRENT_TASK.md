@@ -1,9 +1,9 @@
 # 現在のタスク（起動チェックGreen化PR作成）
 
-## 触っていいファイル（Allowlist）
-- .githooks/
+## 触っていいファイル
 - .gitignore
+- requirements.txt
 - scripts/
-- logs/
-- README.md
+- logs/boot/latest.md
+- logs/proof/latest.md
 - tickets/

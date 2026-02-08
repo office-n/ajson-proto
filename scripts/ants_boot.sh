@@ -11,7 +11,7 @@ is_git() {
 {
   echo "## BOOT PACK"
   echo "- timestamp: $(date '+%Y-%m-%d %H:%M:%S %z')"
-  echo "- pwd: $(pwd)"
+  echo "- pwd: $(basename "$PWD")"
   echo ""
 
   echo "### PACK LINK CHECK"

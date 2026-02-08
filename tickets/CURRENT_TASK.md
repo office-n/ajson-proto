@@ -3,6 +3,7 @@
 ## 触っていいファイル
 - .gitignore
 - requirements.txt
+- scripts/
 - logs/boot/latest.md
 - logs/proof/latest.md
 - tickets/

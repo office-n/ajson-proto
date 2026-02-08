@@ -26,12 +26,13 @@ Paths must be formatted as **inline code** or **code blocks**, NOT as links.
 ## 3. Evidence File Structure
 All evidence files in `docs/evidence/` must follow this structure:
 
-1. **Status**: Clear status (e.g., ✅ **Full Green (110/110 passed)**)
-2. **Context**: Branch name, commit hash (short)
-3. **Verification Results**:
+1. **Timestamp**: Mandatory timestamp in format `YYYY-MM-DDTHH:MM:SS+09:00（Asia/Tokyo）` at the top of the file
+2. **Status**: Clear status (e.g., ✅ **Full Green (110/110 passed)**)
+3. **Context**: Branch name, commit hash (short)
+4. **Verification Results**:
    - `pytest` summary (last line)
    - `lint` summary (pass/fail only, DO NOT list forbidden strings matching the grep pattern)
-4. **Key Changes**:
+5. **Key Changes**:
    - Bullet points of changes
    - Reference files using relative paths in backticks
 

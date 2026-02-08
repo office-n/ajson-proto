@@ -29,6 +29,11 @@
 
 ## 起動手順
 
+### 0. 初回セットアップ（Git hooks設定）
+```bash
+bash scripts/setup_hooks.sh
+```
+
 ### 1. 仮想環境の有効化
 ```bash
 source venv/bin/activate

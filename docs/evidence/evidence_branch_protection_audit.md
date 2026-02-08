@@ -21,6 +21,23 @@
 | Allow Force Pushes | **OFF** | Blocked |
 | Allow Deletions | **OFF** | Blocked |
 
+### 2026-02-08 13:37: **RESTORED (enforce_admins=true)**
+**Action**: Restored administrator enforcement after temporary bypass for PR #18 merge
+
+**Verification**:
+```bash
+# Before restoration (2026-02-08T12:34:32+09:00)
+gh api repos/office-n/ajson-proto/branches/main/protection --jq '.enforce_admins.enabled'
+# Result: false
+
+# After restoration (2026-02-08T13:37:25+09:00)
+gh api repos/office-n/ajson-proto/branches/main/protection --jq '.enforce_admins.enabled'
+# Result: true
+```
+
+**Context**: During PR #18 merge, `enforce_admins` was temporarily set to `false` to allow administrator bypass of failing checks. This restoration re-enables administrator enforcement to maintain security baseline.
+
+
 ### 2026-02-08 03:55: **UNPROTECTED (Audit Log)**
 *(Historical status at time of initial audit)*
 - Status: ❌ UNPROTECTED (404 Not Found)

@@ -7,4 +7,5 @@
 - logs/boot/latest.md
 - logs/proof/latest.md
 - docs/
+- ajson/
 - tickets/

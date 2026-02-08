@@ -11,7 +11,11 @@ class Trace:
         self.records = []
 
     def log(self, event_type: str, details: Dict[str, Any]):
-        timestamp = datetime.now().isoformat()
+        # Phase 9.1: JST Timezone (UTC+9)
+        from datetime import timezone, timedelta
+        jst = timezone(timedelta(hours=9))
+        timestamp = datetime.now(jst).isoformat()
+        
         record = {
             "timestamp": timestamp,
             "type": event_type,

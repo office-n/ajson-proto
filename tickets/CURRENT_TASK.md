@@ -8,4 +8,5 @@
 - logs/proof/latest.md
 - docs/
 - ajson/
+- tests/
 - tickets/

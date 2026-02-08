@@ -1,0 +1,64 @@
+# ajson/core/dispatcher.py
+from typing import List, Dict, Any, Optional
+from dataclasses import dataclass
+
+@dataclass
+class WorkItem:
+    id: str
+    objective: str
+    constraints: List[str]
+    required_evidence: List[str]
+    skill_tags: List[str]
+    assigned_agent_id: Optional[str] = None
+    status: str = "PENDING"
+    result: Optional[Any] = None
+
+class TaskGraph:
+    def __init__(self):
+        self.nodes: List[WorkItem] = []
+
+    def add_node(self, node: WorkItem):
+        self.nodes.append(node)
+
+class Dispatcher:
+    def __init__(self):
+        pass
+
+    def dispatch(self, graph: TaskGraph, registry: Any) -> Dict[str, str]:
+        """
+        Assigns agents to pending work items.
+        Returns a mapping of work_item_id -> agent_id
+        """
+        assignments = {}
+        pending_items = [n for n in graph.nodes if n.status == "PENDING"]
+        
+        # Capability Match Strategy (Simple)
+        for item in pending_items:
+            # Find capable agents
+            candidates = []
+            for agent in registry.list_agents(enabled_only=True):
+                if agent.status == "IDLE":
+                    # Check if agent has at least one matching skill? Or strict match?
+                    # Start simplistic: if exact match or agent has 'all' capability
+                    match_score = 0
+                    for skill in item.skill_tags:
+                        if skill in agent.capabilities or "general" in agent.capabilities:
+                            match_score += 1
+                    if match_score > 0:
+                        candidates.append((agent.id, match_score))
+            
+            # Sort by match score descent
+            candidates.sort(key=lambda x: x[1], reverse=True)
+            
+            if candidates:
+                best_agent_id = candidates[0][0]
+                # Acquire agent (mark busy)
+                if registry.acquire_agents(1): # This is simplified, ideally acquire SPECIFIC agent
+                    # Re-implement acquire to support specific ID or pass ID to acquire
+                    # For now just use registry's state update directly
+                    registry.agents[best_agent_id].status = "BUSY" 
+                    item.assigned_agent_id = best_agent_id
+                    item.status = "ASSIGNED"
+                    assignments[item.id] = best_agent_id
+        
+        return assignments

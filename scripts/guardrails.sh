@@ -27,7 +27,6 @@ ALLOW=$(echo "$ALLOW_RAW" | sed -E 's/^\s*-\s+//' | sed -E 's#^/##')
 CHANGED=$(git diff --cached --name-only)
 
 # --- PROOF GATE (anti-hallucination) ---
-PROOF_LOG="logs/proof/latest.md"
 NEEDS_PROOF=0
 for cf in $CHANGED; do
   case "$cf" in
@@ -39,9 +38,9 @@ for cf in $CHANGED; do
 done
 
 if [ "$NEEDS_PROOF" -eq 1 ]; then
-  if ! echo "$CHANGED" | grep -qx "$PROOF_LOG"; then
-    echo "[GUARD] NG: 証跡ログが不足 → $PROOF_LOG（重要変更が含まれるため必須）"
-    echo "[GUARD] 対応: bash scripts/proof_pack.sh → git add $PROOF_LOG"
+  if ! echo "$CHANGED" | grep -qx "logs/proof/latest.md"; then
+    echo "[GUARD] NG: 証跡ログが不足 → logs/proof/latest.md（重要変更が含まれるため必須）"
+    echo "[GUARD] 対応: bash scripts/proof_pack.sh → git add logs/proof/latest.md"
     exit 1
   fi
 fi

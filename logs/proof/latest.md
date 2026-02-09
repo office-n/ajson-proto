@@ -1,11 +1,16 @@
 ## PROOF PACK
-- timestamp: 2026-02-09 16:03:57 +0900
+- timestamp: 2026-02-09 21:30:12 +0900
 - pwd: ajson-proto
 
 ### GIT
 - hooksPath: .githooks
 
 ### git status (porcelain)
+M  ajson/capabilities/voice_realtime.py
+A  docs/architecture/voice_redesign.md
+A  docs/evidence/evidence_phase9_4_realtime_voice_stub.md
+ M logs/proof/latest.md
+A  tests/test_voice_realtime_dry_run.py
  M ajson/core/dispatcher.py
  M logs/boot/latest.md
  M logs/proof/latest.md
@@ -20,6 +25,11 @@ b725d64 chore: update roadmap for Phase 9.2 completion and 9.3 proposal + logs (
 26e4200 chore: Enable Japanese response rule (#29)
 
 ### staged diff (stat)
+ ajson/capabilities/voice_realtime.py               | 53 +++++++++++++++++++++-
+ docs/architecture/voice_redesign.md                | 20 ++++++++
+ .../evidence_phase9_4_realtime_voice_stub.md       | 30 ++++++++++++
+ tests/test_voice_realtime_dry_run.py               | 31 +++++++++++++
+ 4 files changed, 132 insertions(+), 2 deletions(-)
 
 ### NOTE
 - このログが出せない作業は「未検証/未完了」扱い

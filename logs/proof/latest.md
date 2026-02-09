@@ -1,29 +1,21 @@
 ## PROOF PACK
-- timestamp: 2026-02-09 03:21:11 +0900
+- timestamp: 2026-02-09 14:02:20 +0900
 - pwd: ajson-proto
 
 ### GIT
 - hooksPath: .githooks
 
 ### git status (porcelain)
- M ajson/core/orchestrator.py
- M ajson/core/policy.py
- M ajson/core/trace.py
+ M logs/boot/latest.md
  M logs/proof/latest.md
- M tickets/CURRENT_TASK.md
-?? ajson/config/
-?? ajson/core/aggregator.py
-?? ajson/core/dispatcher.py
-?? ajson/core/registry.py
-?? docs/architecture/starship_orchestration_pool.md
-?? tests/test_orchestrator_dry_run.py
+?? docs/evidence/evidence_bypass_incident_pr28.md
 
 ### git log -5
-9a350f6 feat: implement Phase 9 Starship core stubs (#26)
-07e1538 chore: add evidence for required status checks enablement (#24)
-397f489 fix: restore green for Lint / lint (#23)
-a6a2195 docs: add mandatory timestamp requirement to evidence files (#21)
-25b00ff ops: restore Ants boot guardrails in-repo (#22)
+8742832 fix(dispatcher): update registry access to _agents + proof logs
+f764535 fix(registry): restore list_agents enabled_only arg + proof logs
+593473a fix(registry): restore init config_path arg + proof logs
+78d17f1 fix(policy): resolve NameError in lint + update logs
+0a70254 feat: phase9.2 subagent pool config + registry fixes (dry-run tested)
 
 ### staged diff (stat)
 

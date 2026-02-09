@@ -1,0 +1,12 @@
+{
+  "subagents": [
+    {
+      "id": "gemini-1",
+      "provider": "gemini",
+      "model": "gemini-2.0-flash-exp",
+      "key_ref": "ENV:GEMINI_API_KEY_1",
+      "capabilities": ["reasoning", "coding"],
+      "enabled": true
+    }
+  ]
+}

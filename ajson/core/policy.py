@@ -1,4 +1,3 @@
-# ajson/core/policy.py
 import os
 from pathlib import Path
 from typing import List

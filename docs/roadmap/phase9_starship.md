@@ -10,13 +10,24 @@
 - Implement a simple "Echo Agent" that uses "FileRead Tool".
 - Prove the Orchestrator -> Policy -> Tool loop works.
 
-## Phase 9.2: Realtime Voice
-- Integrate OpenAI Realtime API (WebRTC/crypto).
-- Connect Voice Input -> Orchestrator -> Voice Output.
+## Phase 9.2: Sub-AI Pool Management (Done)
+- Integrates `subagents.json` configuration.
+- Registry enhancements (unified store, model attribute).
+- Dry-Run testing for pool lifecycle.
 
-## Phase 9.3: Browser Autopilot
-- Integrate Browser Tool (Playwright/Puppeteer wrapper).
-- Enable "Browse and Extract" capabilities.
+## Phase 9.3: Dispatcher Minimal (Next)
+- **Goal**: Implement intelligence dispatcher logic.
+- **Features**:
+  - `capability_match`: Route tasks based on agent capabilities.
+  - `load_balance`: Simple round-robin or least-busy strategy.
+  - `failover`: Retry with different agent on failure.
+- **Testing**:
+  - DRY_RUN tests for dispatch logic (mock agents).
+  - Verify failover sequences without external calls.
+
+## Phase 9.4: Realtime Voice (Future)
+- Integrate OpenAI Realtime API (WebRTC/crypto).
+
 
 ## Phase 9.4: Full Cockpit
 - Multi-agent coordination.

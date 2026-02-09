@@ -15,11 +15,11 @@
 - Registry enhancements (unified store, model attribute).
 - Dry-Run testing for pool lifecycle.
 
-## Phase 9.3: Dispatcher Minimal (Next)
+## Phase 9.3: Dispatcher Minimal (Done)
 - **Goal**: Implement intelligence dispatcher logic.
 - **Features**:
   - `capability_match`: Route tasks based on agent capabilities.
-  - `load_balance`: Simple round-robin or least-busy strategy.
+  - `load_balance`: Availability-based (IDLE check) with Random Tie-break.
   - `failover`: Retry with different agent on failure.
 - **Testing**:
   - DRY_RUN tests for dispatch logic (mock agents).

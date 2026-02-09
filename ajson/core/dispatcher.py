@@ -1,6 +1,6 @@
-# ajson/core/dispatcher.py
 from typing import List, Dict, Any, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import random
 
 @dataclass
 class WorkItem:
@@ -12,6 +12,7 @@ class WorkItem:
     assigned_agent_id: Optional[str] = None
     status: str = "PENDING"
     result: Optional[Any] = None
+    excluded_agent_ids: List[str] = field(default_factory=list)
 
 class TaskGraph:
     def __init__(self):
@@ -37,15 +38,25 @@ class Dispatcher:
             # Find capable agents
             candidates = []
             for agent in registry.list_agents(enabled_only=True):
+                # Failover check: skip if excluded
+                if agent.id in item.excluded_agent_ids:
+                    continue
+                
                 if agent.status == "IDLE":
                     # Check if agent has at least one matching skill? Or strict match?
                     # Start simplistic: if exact match or agent has 'all' capability
                     match_score = 0
                     for skill in item.skill_tags:
-                        if skill in agent.capabilities or "general" in agent.capabilities:
-                            match_score += 1
+                        if skill in agent.capabilities:
+                            match_score += 2 # Specific match
+                        elif "general" in agent.capabilities:
+                            match_score += 1 # General fallback
+                    
                     if match_score > 0:
                         candidates.append((agent.id, match_score))
+            
+            # Load Balance: Randomize before sort to break ties fairly
+            random.shuffle(candidates)
             
             # Sort by match score descent
             candidates.sort(key=lambda x: x[1], reverse=True)

@@ -1,5 +1,6 @@
 ## BOOT PACK
 - timestamp: 2026-02-09 21:30:37 +0900
+- timestamp: 2026-02-09 16:03:57 +0900
 - pwd: ajson-proto
 
 ### PACK LINK CHECK
@@ -18,6 +19,10 @@ A  docs/evidence/evidence_phase9_4_realtime_voice_stub.md
  M logs/boot/latest.md
 M  logs/proof/latest.md
 A  tests/test_voice_realtime_dry_run.py
+ M ajson/core/dispatcher.py
+ M logs/boot/latest.md
+?? docs/evidence/evidence_phase9_3_dispatcher.md
+?? tests/test_dispatcher_dry_run.py
 
 ### git log -5
 0489c0d chore: add merge verification evidence (SSOT)

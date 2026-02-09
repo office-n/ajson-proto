@@ -11,6 +11,11 @@ A  docs/architecture/voice_redesign.md
 A  docs/evidence/evidence_phase9_4_realtime_voice_stub.md
  M logs/proof/latest.md
 A  tests/test_voice_realtime_dry_run.py
+ M ajson/core/dispatcher.py
+ M logs/boot/latest.md
+ M logs/proof/latest.md
+?? docs/evidence/evidence_phase9_3_dispatcher.md
+?? tests/test_dispatcher_dry_run.py
 
 ### git log -5
 0489c0d chore: add merge verification evidence (SSOT)

@@ -1,6 +1,5 @@
 ## BOOT PACK
-- timestamp: 2026-02-09 21:30:37 +0900
-- timestamp: 2026-02-09 16:03:57 +0900
+- timestamp: 2026-02-10 00:37:26 +0900
 - pwd: ajson-proto
 
 ### PACK LINK CHECK
@@ -13,23 +12,15 @@
 - hooksPath: .githooks
 
 ### git status (porcelain)
-M  ajson/capabilities/voice_realtime.py
-A  docs/architecture/voice_redesign.md
-A  docs/evidence/evidence_phase9_4_realtime_voice_stub.md
  M logs/boot/latest.md
-M  logs/proof/latest.md
-A  tests/test_voice_realtime_dry_run.py
- M ajson/core/dispatcher.py
- M logs/boot/latest.md
-?? docs/evidence/evidence_phase9_3_dispatcher.md
-?? tests/test_dispatcher_dry_run.py
+ M logs/proof/latest.md
 
 ### git log -5
-0489c0d chore: add merge verification evidence (SSOT)
-b725d64 chore: update roadmap for Phase 9.2 completion and 9.3 proposal + logs (#33)
-1d8f4e2 chore: add evidence for PR#28 bypass incident (#32)
-7e7f228 feat: Phase 9.2 Sub-AI Pool Management (#31)
-26e4200 chore: Enable Japanese response rule (#29)
+755749b Merge remote-tracking branch 'origin/main' into chore/phase9-status-ssot
+22fe66b docs: add Phase 9 Status SSOT table (final retry)
+fc92a4c feat: Phase 9.4 Realtime Voice stub + DRY_RUN tests (#35)
+ff8035e feat: Phase 9.4 Realtime Voice stub + DRY_RUN tests
+420817f feat: Phase 9.3 Dispatcher Minimal (#34)
 
 ### NOTE
 - non-git folders are 'All Green' if PACK LINK CHECK is OK and logs update.

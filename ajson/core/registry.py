@@ -8,6 +8,7 @@ from dataclasses import dataclass, asdict
 class AgentInfo:
     id: str
     provider: str
+    model: str  # Added model
     key_ref: str
     capabilities: List[str]
     enabled: bool = True
@@ -15,7 +16,7 @@ class AgentInfo:
 
 class AgentRegistry:
     def __init__(self, config_path: str = None):
-        self.agents: Dict[str, AgentInfo] = {}
+        self._agents: Dict[str, AgentInfo] = {}
         if config_path and os.path.exists(config_path):
             self.load_from_config(config_path)
             
@@ -27,20 +28,25 @@ class AgentRegistry:
                     self.register_agent(
                         id=agent_data['id'],
                         provider=agent_data['provider'],
+                        model=agent_data.get("model", ""), # Load model
                         key_ref=agent_data['key_ref'],
                         capabilities=agent_data.get('capabilities', []),
                         enabled=agent_data.get('enabled', True)
                     )
         except Exception as e:
-            print(f"Error loading config: {e}")
+            print(f"Config err: {e}")
 
-    def register_agent(self, id: str, provider: str, key_ref: str, capabilities: List[str], enabled: bool = True):
-        self._agents[id] = AgentInfo(id, provider, key_ref, capabilities, enabled) # Changed from self.agents to self._agents
+    def register_agent(self, id: str, provider: str, model: str, key_ref: str, capabilities: List[str], enabled: bool = True):
+        self._agents[id] = AgentInfo(id, provider, model, key_ref, capabilities, enabled)
 
-    def list_agents(self, role: str = None, enabled: bool = True) -> List[AgentInfo]:
+    def list_agents(self, role: str = None, enabled: bool = True, enabled_only: bool = None) -> List[AgentInfo]:
         """
         Lists available agents, optionally filtered by role/capability or enabled status.
+        Supports legacy 'enabled_only' arg (maps to enabled).
         """
+        # Legacy support
+        if enabled_only is not None:
+            enabled = enabled_only
         results = []
         for agent in self._agents.values():
             if enabled and not agent.enabled:
@@ -70,12 +76,21 @@ class AgentRegistry:
         return selected
 
     def release_agents(self, agent_ids: List[str], status: str = "IDLE"):
+        """
+        Releases agents back to the pool (IDLE).
+        """
         for aid in agent_ids:
-            if aid in self.agents:
-                self.agents[aid].status = status
+            if aid in self._agents:
+                self._agents[aid].status = "IDLE"
+
+    def get_agent(self, agent_id: str) -> Optional[AgentInfo]:
+        return self._agents.get(agent_id)
 
     def get_api_key(self, agent_id: str) -> Optional[str]:
-        agent = self.agents.get(agent_id)
+        """
+        Resolves the API key from the environment variable referenced by key_ref.
+        """
+        agent = self.get_agent(agent_id)
         if not agent:
             return None
         

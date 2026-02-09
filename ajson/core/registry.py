@@ -35,20 +35,38 @@ class AgentRegistry:
             print(f"Error loading config: {e}")
 
     def register_agent(self, id: str, provider: str, key_ref: str, capabilities: List[str], enabled: bool = True):
-        self.agents[id] = AgentInfo(id, provider, key_ref, capabilities, enabled)
+        self._agents[id] = AgentInfo(id, provider, key_ref, capabilities, enabled) # Changed from self.agents to self._agents
 
-    def list_agents(self, enabled_only: bool = True) -> List[AgentInfo]:
-        return [a for a in self.agents.values() if (not enabled_only or a.enabled)]
+    def list_agents(self, role: str = None, enabled: bool = True) -> List[AgentInfo]:
+        """
+        Lists available agents, optionally filtered by role/capability or enabled status.
+        """
+        results = []
+        for agent in self._agents.values():
+            if enabled and not agent.enabled:
+                continue
+            # Basic role filter (matches if capability is present)
+            if role and role not in agent.capabilities:
+                continue
+            results.append(agent)
+        return results
 
-    def acquire_agents(self, count: int = 1, strategy: str = "any") -> List[str]:
-        # Simple implementation: First available K agents
-        available = [a.id for a in self.list_agents() if a.status == "IDLE"]
-        if len(available) < count:
-            return [] # Or return partial list? For strictness, return empty if not enough.
+    def acquire_agents(self, k: int, strategy: str = "random") -> List[str]:
+        """
+        Acquires k idle agents from the pool.
+        Strategies: 'random', 'capability_match' (future)
+        """
+        available = [a.id for a in self._agents.values() if a.status == "IDLE" and a.enabled]
+        if len(available) < k:
+            return [] # Or return partial? For now, strict: all or nothing
         
-        selected = available[:count]
+        # Simple selection (first k)
+        selected = available[:k]
+        
+        # Mark as BUSY
         for aid in selected:
-            self.agents[aid].status = "BUSY"
+            self._agents[aid].status = "BUSY"
+            
         return selected
 
     def release_agents(self, agent_ids: List[str], status: str = "IDLE"):

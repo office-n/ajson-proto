@@ -56,7 +56,7 @@ class Dispatcher:
                 if registry.acquire_agents(1): # This is simplified, ideally acquire SPECIFIC agent
                     # Re-implement acquire to support specific ID or pass ID to acquire
                     # For now just use registry's state update directly
-                    registry.agents[best_agent_id].status = "BUSY" 
+                    registry._agents[best_agent_id].status = "BUSY" 
                     item.assigned_agent_id = best_agent_id
                     item.status = "ASSIGNED"
                     assignments[item.id] = best_agent_id

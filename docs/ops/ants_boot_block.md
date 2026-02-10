@@ -14,6 +14,7 @@
 ## 2. 作業中（Runtime）
 - **Hourly Anchor**: 長時間作業時は `scripts/ants_hourly_anchor.sh` を裏で回すか、手動で定期的にAnchor更新。
 - **Preflight**: PR作成や報告前に `scripts/ants_preflight.sh` で自己検査。
+- **Merge Check**: マージ実行前に「ログイン中のアカウント」を必ず確認。`office-n` でない場合は **STOP**。
 
 ## 3. 停止条件（Immediate Stop）
 - Remote不一致

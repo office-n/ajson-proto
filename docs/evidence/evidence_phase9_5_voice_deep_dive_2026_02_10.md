@@ -26,7 +26,7 @@
 ```
 ============================= test session starts ==============================
 platform darwin -- Python 3.12.x, pytest-8.x.x, pluggy-1.x.x
-rootdir: /Users/nakamurashingo/.gemini/antigravity/scratch/ajson_prototype/ajson-proto
+rootdir: .
 collected 2 items
 
 tests/test_voice_mock.py ..                                            [100%]

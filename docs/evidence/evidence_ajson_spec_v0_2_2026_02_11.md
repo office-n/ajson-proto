@@ -13,6 +13,21 @@ Timestamp: 2026-02-11T08:35:00+09:00 (JST)
 - **安全策**: SSOT (File System) への保存時にハッシュ値を計算・記録し、改竄を検知できるようにする。
 - **非ゴール**: 現時点でのクラウドストレージ（S3等）への直接アップロード（プロトタイプ範囲外）。
 
+### 1-A. 生産性キット (Worktree / SSOT Auto-Tasks / Approval Queue)
+- **決定**:
+  1. **Worktree運用**: `task_id` ごとに `git worktree` で作業領域を分離する。
+  2. **自動タスク**: ローカル完結のLint/Test/SSOTチェックを導入する。
+  3. **Approval Queue**: 承認プロセスを状態として標準化する。
+- **理由**:
+  - 並列開発時のファイル競合や環境汚染（混線）を物理的に防ぐため。
+  - 毎朝の健全性確認（Sanity Check）を自動化し、品質劣化を防ぐため。
+  - 将来的なモバイル承認アプリの実装に向けた、承認状態の標準化が必要なため。
+- **安全策**:
+  - Worktree削除時は証跡を優先し、失敗時はディレクトリを保持する。
+  - 自動タスクのスケジューラは既定OFFとし、意図しないリソース消費を防ぐ。
+  - Approval Queueは「破壊操作」検出時に強制的に割り込む。
+
+
 ### 2. RPAの再定義
 - **決定**: 「AIアプリUI操作」を禁止し、「API連携」を主軸、「外部サービスRPA」を代替手段とする。
 - **理由**:
@@ -43,7 +58,9 @@ Timestamp: 2026-02-11T08:35:00+09:00 (JST)
   - RPAの厳格な定義（UI操作の禁止）。
   - Local Workspace Connector（ファイル操作）。
   - コスト試算ロジック。
+  - **生産性キット**: Worktree強制、SSOT自動タスク、Approval Queue標準化。
 - **変更なし**:
+
   - Starship Architecture、状態遷移、基本ロール（Jarvis/Cody）、Allowlist/Denylistによる防御機構。
 
 ## 参照URL (Reference Only)

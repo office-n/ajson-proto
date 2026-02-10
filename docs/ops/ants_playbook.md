@@ -31,6 +31,8 @@ Antsはステートレスな実行機であり、記憶（コンテキスト）�
 - **Sequence**:
   1. Login `jarvisrv` -> Approve
   2. Login `office-n` -> Check Green & Approved -> Squash Merge
+- **Rule**: Mergerは原則 `office-n` とする。
+  - `office-n` に切り替えできない場合は **STOP**（代行マージ禁止）。
 - **Bypass**: 禁止。管理者権限が必要な場合はSTOP。
 
 ### 3-3. Piloting

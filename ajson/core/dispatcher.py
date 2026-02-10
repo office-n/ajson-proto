@@ -30,7 +30,8 @@ class Dispatcher:
         Assigns agents to pending work items.
         Returns a mapping of work_item_id -> agent_id
         """
-        assignments = {}
+        # Initialize with None to avoid KeyError (Strategy A)
+        assignments = {n.id: None for n in graph.nodes if n.status == "PENDING"}
         pending_items = [n for n in graph.nodes if n.status == "PENDING"]
         
         # Capability Match Strategy (Simple)
@@ -64,12 +65,12 @@ class Dispatcher:
             if candidates:
                 best_agent_id = candidates[0][0]
                 # Acquire agent (mark busy)
-                if registry.acquire_agents(1): # This is simplified, ideally acquire SPECIFIC agent
-                    # Re-implement acquire to support specific ID or pass ID to acquire
-                    # For now just use registry's state update directly
-                    registry._agents[best_agent_id].status = "BUSY" 
-                    item.assigned_agent_id = best_agent_id
-                    item.status = "ASSIGNED"
-                    assignments[item.id] = best_agent_id
+                # FIX: acquire_agents(1) grabs ANY agent, potentially wrong one.
+                # Since we identified IDLE agent in candidates, just mark it BUSY.
+                # if registry.acquire_agents(1): <- REMOVED (Buggy)
+                registry._agents[best_agent_id].status = "BUSY" 
+                item.assigned_agent_id = best_agent_id
+                item.status = "ASSIGNED"
+                assignments[item.id] = best_agent_id
         
         return assignments

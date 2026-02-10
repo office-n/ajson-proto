@@ -22,9 +22,9 @@
 - **Lint**: Passed (Expected).
 
 ## PR & Merge
-- **PR**: TBD
-- **Merged At (UTC)**: TBD
-- **Merge commit SHA**: TBD
-- **Approver / Merger**: TBD
-- **Checks**: Lint / lint (TBD)
-- **main HEAD**: TBD
+- **PR**: https://github.com/office-n/ajson-proto/pull/35
+- **Merged At (UTC)**: 2026-02-09T14:31:48Z
+- **Merge commit SHA**: fc92a4cc7d7dad0224e52e6256bac28b16af8792
+- **Approver / Merger**: office-n / office-n
+- **Checks**: Lint / lint (SUCCESS)
+- **main HEAD**: fc92a4cc7d7dad0224e52e6256bac28b16af8792

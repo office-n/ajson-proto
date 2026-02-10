@@ -24,33 +24,44 @@ class AudioSink(ABC):
         """Writes an audio frame."""
         pass
 
+from ajson.core.realtime_mock import RealtimeMock
+from ajson.core.realtime_client import RealtimeClient
+
 class RealtimeVoice:
     """
-    Mock implementation of RealtimeVoice processing.
-    Passes audio from source to sink with simulated processing delay.
+    RealtimeVoice processing orchestrator.
+    Uses an injected RealtimeClient (default: Mock) to handle API communication.
     """
-    def __init__(self, model_name: str = "mock-model"):
-        self.model_name = model_name
+    def __init__(self, client: Optional[RealtimeClient] = None):
+        self.client = client or RealtimeMock()
         self._shutdown = False
 
     def process(self, source: AudioSource, sink: AudioSink, max_frames: int = 100):
         """
-        Processes audio frames from source and writes to sink.
-        Stops after max_frames or when source returns None.
+        Processes audio frames from source -> client -> sink.
         """
-        frame_count = 0
-        while not self._shutdown and frame_count < max_frames:
-            frame = source.read()
-            if frame is None:
-                break
-            
-            # Simulate processing (e.g. VAD, STT, LLM, TTS latency)
-            # For mock, we just pass through.
-            # In a real implementation, this would involve network calls.
-            # Here, we ensure NO network calls are made.
-            
-            sink.write(frame)
-            frame_count += 1
+        self.client.connect()
+        try:
+            frame_count = 0
+            while not self._shutdown and frame_count < max_frames:
+                # 1. Read from Source
+                input_frame = source.read()
+                if input_frame is None:
+                    break
+                
+                # 2. Send to Client (Mock or Real)
+                self.client.send_audio(input_frame)
+
+                # 3. Receive from Client
+                output_frame = self.client.receive_audio()
+                
+                # 4. Write to Sink (if we got something back)
+                if output_frame:
+                    sink.write(output_frame)
+                
+                frame_count += 1
+        finally:
+            self.client.close()
             
     def shutdown(self):
         self._shutdown = True

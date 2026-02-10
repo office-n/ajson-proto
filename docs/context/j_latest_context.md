@@ -1,15 +1,30 @@
-# Cont| Key | Value |
-|---|---|
-| **Timestamp (JST)** | 2026-02-10T16:00:00+09:00 |
-| **main HEAD SHA** | `c53aeaf356784d59a53106192d6e46955a687556` |
-| **PR #42 Merge (UTC)** | 2026-02-10T05:27:17Z (`17ddefc`) by `office-n` |
-| **PR #43 Merge (UTC)** | 2026-02-10T05:39:13Z (`10e960b`) by `office-n` |
-| **PR #44 Merge (UTC)** | 2026-02-10T06:55:12Z (`c53aeaf`) by `office-n` |
+# AJSON Project Context (Latest)
+Last Updated: 2026-02-11 08:00 JST
 
-## Status Table
-| Phase | Feature | Status | PR | Evidence | Merge (JST) |
-|---|---|---|---|---|---|
-| 9.5 | Kickoff (Proposal A) | ✅完了 | #42 | `evidence_phase9_5_kickoff...` | 2026/02/10 14:27 |
-| 9.5 | Kickoff (Evidence) | ✅完了 | #43 | `evidence_pr42_43_merge...` | 2026/02/10 14:39 |
-| 9.5 | Reporting Policy (JP) | ✅完了 | #44 | `evidence_pr44_merge_facts...` | 2026/02/10 15:55 |
-✅完了
+## Project Overview
+- **Name**: AJSON (Agent JSON Orchestrator)
+- **Goal**: Build a chaotic-good AI agent orchestrator with reliable "Office-N" business logic enforcement.
+- **Current Phase**: Phase 9.6 (Realtime API Integration - Skeleton)
+
+## Git Context
+- **Repository**: office-n/ajson-proto
+- **Main Branch**: `main` (Last stable: `4f5830b`)
+- **Working Branch**: `feat/phase9-6-realtime-integration-skeleton-v2` (Head: `c14f415`)
+  - **Status**: PR #48 Approved (Pending Merge due to Branch Protection)
+  - **Contains**: RealtimeClient Mock, Stub, Tests, Evidence.
+
+## Recent Changes (Phase 9.6)
+- **Implemented**: `RealtimeClient` interface, `RealtimeMock` (loopback), `RealtimeOpenAI` (stub with NETWORK DENY).
+- **Refactored**: `RealtimeVoice` to use Dependency Injection for client.
+- **Tests**: Added `tests/test_realtime_mock_e2e.py` for mock flow verification.
+- **Documentation**: Added Roadmap and Kickoff Evidence.
+
+## Key Files
+- `ajson/core/realtime_client.py`: Base interface.
+- `ajson/core/realtime_mock.py`: In-memory mock implementation.
+- `ajson/core/realtime_openai.py`: Safe stub for OpenAI (Network Deny).
+- `ajson/core/voice.py`: Updated orchestrator using DI.
+
+## Next Steps
+1. **Manual Merge**: Merge PR #48 to `main`.
+2. **Phase 9.6 Completion**: Proceed to implementation of actual Realtime API logic (Phase 9.7+).

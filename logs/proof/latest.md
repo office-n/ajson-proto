@@ -1,26 +1,28 @@
 ## PROOF PACK
-- timestamp: 2026-02-10 12:48:20 +0900
+- timestamp: 2026-02-10 14:06:20 +0900
 - pwd: ajson-proto
 
 ### GIT
 - hooksPath: .githooks
 
 ### git status (porcelain)
- M docs/ops/ants_boot_block.md
- M docs/ops/ants_playbook.md
+A  docs/evidence/evidence_phase9_5_kickoff_pr_facts_2026_02_10.md
+M  docs/roadmap/phase9_5_kickoff.md
  M logs/boot/latest.md
- M logs/proof/latest.md
-?? docs/evidence/evidence_incident_merger_not_office_n_pr39.md
-?? docs/evidence/evidence_pr38_36_37_39_merge_facts_2026_02_10.md
+MM logs/proof/latest.md
 
 ### git log -5
+6ddecd1 docs: Phase9.5 kickoff (A/B proposal + evidence)
+dfe3aeb Add evidence for PR#40 merger policy fixdocs: add evidence for PR#40 merge facts (#41)
+521bf35 ops: enforce merger=office-n policy (stop if cannot switch) (#40)
 18424bf docs: Phase 9 Status Board (SSOT) (#37) (#39)
 732e753 docs: Phase 9 Status Board (SSOT) (#37)
-2e7067c docs(evidence): add Phase9.4 PR merge facts (#36)
-38ae54b fix: dispatcher failover KeyError in DRY_RUN tests (#38)
-fc92a4c feat: Phase 9.4 Realtime Voice stub + DRY_RUN tests (#35)
 
 ### staged diff (stat)
+ ...vidence_phase9_5_kickoff_pr_facts_2026_02_10.md | 26 +++++++++++++++++++++
+ docs/roadmap/phase9_5_kickoff.md                   |  8 ++++++-
+ logs/proof/latest.md                               | 27 ++++++----------------
+ 3 files changed, 40 insertions(+), 21 deletions(-)
 
 ### NOTE
 - このログが出せない作業は「未検証/未完了」扱い

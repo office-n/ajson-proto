@@ -14,21 +14,27 @@ if [ ! -f "$REPORT_FILE" ]; then
   exit 1
 fi
 
-# Check for non-ASCII characters (Japanese check)
-# Ideally, we want to ensure *some* Japanese exists, or ensure *mostly* Japanese.
-# Simple check: If the file is purely ASCII, it might be English-only regression.
-# However, code blocks are ASCII. 
-# Better strategy: Check if the file contains *any* multi-byte characters (assuming UTF-8 Japanese).
-# But evidence files contain English logs.
-# Let's rely on the "Boot Block" rule: "Japanese only".
-# Failure condition: File seems to be English only (low ratio of non-ASCII).
-# For now, let's just check if it contains "Timestamp (JST)" or similar mandatory headers.
 
-HEADER_CHECK=$(grep "Timestamp (JST)" "$REPORT_FILE")
-if [ -z "$HEADER_CHECK" ]; then
-  echo "NG: 'Timestamp (JST)' header missing."
+# 1. Forbidden phrases check
+if grep -q "Progress Updates" "$REPORT_FILE"; then
+  echo "NG: Forbidden phrase 'Progress Updates' found in $REPORT_FILE. Use 'Final Report Only'."
   exit 1
 fi
 
-echo "OK: Preflight passed for $REPORT_FILE"
+# 2. English-only (ASCII ratio) check
+# Strategy: Count total bytes vs ASCII bytes. If ASCII > 90%, it's likely English-only.
+# Using 'wc -c' for total bytes and 'tr -cd "[[:print:]]\t\n" | wc -c' for ASCII printable.
+TOTAL_BYTES=$(wc -c < "$REPORT_FILE")
+ASCII_BYTES=$(tr -cd '\000-\177' < "$REPORT_FILE" | wc -c)
+
+if [ "$TOTAL_BYTES" -gt 0 ]; then
+  # Calculate ASCII ratio (integer math)
+  RATIO=$(( 100 * ASCII_BYTES / TOTAL_BYTES ))
+  if [ "$RATIO" -gt 90 ]; then
+    echo "NG: Report content seems to be English-only (ASCII ratio: ${RATIO}%). Use Japanese."
+    exit 1
+  fi
+fi
+
+echo "OK: Preflight passed for $REPORT_FILE (ASCII: ${RATIO}%)"
 exit 0

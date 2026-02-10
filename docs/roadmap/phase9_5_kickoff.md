@@ -30,8 +30,14 @@ Timestamp (JST): 2026-02-10T13:55:00+09:00
 - **リスク**: Voice機能の可視化が遅れる。
 
 ## 5. ボス判断ポイント
-- [ ] **A案**: Voice 実装深化
+- [x] **A案**: Voice 実装深化
 - [ ] **B案**: 次ロードマップ項目
+
+### 選択案の受け入れ条件 (Acceptance Criteria)
+1. **Network Constraint**: 外部通信（OpenAI API等）を行わず、Mock/Stubによるローカル完結動作であること。
+2. **Interface Compliance**: `RealtimeVoice` クラスが抽象基底クラス（もしあれば）または規定のインターフェースを遵守していること。
+3. **Test Coverage**: 新規実装コードに対して単体テスト（pytest）が存在し、Passすること。
+4. **Ops Compliance**: 全ての操作が `office-n` 権限で行われ、Bypassルールが使用されていないこと。
 
 ## 6. 完了条件
 - 選択された案に基づく実装PRが作成され、新ポリシー通りにマージされること。

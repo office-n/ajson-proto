@@ -1,12 +1,13 @@
-# ContextPack (SSOT)
-Timestamp: 2026-02-10T13:35:00+09:00
-
-## main_head
-SHA: dfe3aeb3dfc4b7574438099170ec11067d7c810e
-
-## merged_facts
-- PR#40: mergedAt_utc=2026-02-10T03:57:10Z, mergeSHA=521bf35, mergedBy=office-n, checks=Success
-- PR#41: mergedAt_utc=2026-02-10T04:14:18Z, mergeSHA=dfe3aeb, mergedBy=office-n, checks=Success
+# Cont| Key | Value |
+|---|---|
+| **Timestamp (JST)** | 2026-02-10T15:00:00+09:00 |
+| **main HEAD SHA** | `10e960b4b727663571ae4c03e519c0b759652b08` |
+| **PR #42 Merge (UTC)** | 2026-02-10T05:27:17Z (`17ddefc`) by `office-n` |
+| **PR #43 Merge (UTC)** | 2026-02-10T05:39:13Z (`10e960b`) by `office-n` |
 
 ## Status Table
-- Ops | Merger=office-n 強制: ✅完了
+| Phase | Feature | Status | PR | Evidence | Merge (JST) |
+|---|---|---|---|---|---|
+| 9.5 | Kickoff (Proposal A) | ✅完了 | #42 | `evidence_phase9_5_kickoff...` | 2026/02/10 14:27 |
+| 9.5 | Kickoff (Evidence) | ✅完了 | #43 | `evidence_pr42_43_merge...` | 2026/02/10 14:39 |
+✅完了

@@ -40,3 +40,5 @@ htmlcov/
 uploads/*.txt
 uploads/*
 !uploads/.gitkeep
+.ants/
+run/*.pid

@@ -3,7 +3,7 @@ Pydantic models for AJSON MVP
 """
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class MissionStatus:
@@ -51,8 +51,7 @@ class Mission(BaseModel):
     created_at: datetime
     updated_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Step models
@@ -75,8 +74,7 @@ class Step(BaseModel):
     status: str
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ToolRun models
@@ -99,8 +97,7 @@ class ToolRun(BaseModel):
     block_reason: Optional[str]
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Approval models
@@ -122,8 +119,7 @@ class Approval(BaseModel):
     created_at: datetime
     approved_at: Optional[datetime] = None
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Artifact models
@@ -144,8 +140,7 @@ class Artifact(BaseModel):
     content: str
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # Memory models
@@ -164,5 +159,4 @@ class Memory(BaseModel):
     value: str
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

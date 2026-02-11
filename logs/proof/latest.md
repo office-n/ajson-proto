@@ -1,28 +1,32 @@
 ## PROOF PACK
-- timestamp: 2026-02-11 13:46:49 +0900
+- timestamp: 2026-02-11 23:00:03 +0900
 - pwd: ajson-proto
 
 ### GIT
 - hooksPath: .githooks
 
 ### git status (porcelain)
- M logs/boot/latest.md
+M  ajson/models.py
  M logs/proof/latest.md
-?? docs/evidence/evidence_ssot_status_board_2026_02_11.md
-?? docs/reports/ants_thread_report_2026_02_11_pr53_merge_phase9_7_kickoff.md
-?? docs/reports/git_log_2026_02_11.txt
-?? docs/ssot/
+?? docs/evidence/evidence_pr54_55_56_merge_facts_v1_4.md
+?? docs/evidence/runlog_v1_3_2026-02-11.md
+?? docs/evidence/runlog_v1_5_2026-02-11T22:57:00+09:00.md
+?? docs/reports/ants_crop_v1_2_report.md
+?? docs/reports/ants_crop_v1_3_report.md
+?? docs/reports/crop_v1_4_final_2026-02-11.md
+?? pr_body.md
+?? pr_body_981.md
 
 ### git log -5
-eae4efe docs: add AJSON spec v2.1 (cockpit + governance) (#53)
-e7a7134 docs: finalize SSOT with PR#50/49 merges and timestamp fix (#51)
-46b624f docs: AJSON spec v0.2 (cockpit + connectors + RPA + local workspace + costs) (#49)
-3e28013 docs: SSOT for PR#48 merge facts (#50)
-77c8378 feat: Phase9.6 Realtime API Skeleton (v2) (#48)
+044386f docs: add verification runlog v1.4 and relax boot log guardrail
+c834ae4 chore: untrack runtime files (logs/boot, run/) and update gitignore
+0e5dc7a fix: datetime deprecation and optimize boot speed
+9d98e59 docs: add single SSOT status board (#56)
+c51772e feat: Phase9.7 realtime session logic (no-network, tests, evidence) (#55)
 
 ### staged diff (stat)
- ajson/core/voice.py | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ ajson/models.py | 20 +++++++-------------
+ 1 file changed, 7 insertions(+), 13 deletions(-)
 
 ### NOTE
 - このログが出せない作業は「未検証/未完了」扱い

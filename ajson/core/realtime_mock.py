@@ -1,8 +1,8 @@
 from typing import Optional, List
-from ajson.core.realtime_client import RealtimeClient
+from ajson.core.network_adapter import NetworkAdapter
 from ajson.core.voice import AudioFrame
 
-class RealtimeMock(RealtimeClient):
+class RealtimeMock(NetworkAdapter):
     """
     In-memory mock implementation of RealtimeClient.
     Echoes input audio back as output (loopback), simulating processing.

@@ -1,30 +1,30 @@
-from abc import ABC, abstractmethod
 from typing import Optional
-
-# Re-export AudioFrame for convenience
-# Ideally this would be in a common types module, 
-# but for now we keep it simple.
+from ajson.core.network_adapter import NetworkAdapter
 from ajson.core.voice import AudioFrame
+import logging
 
-class RealtimeClient(ABC):
-    """Abstract base class for Realtime API clients."""
-    
-    @abstractmethod
+logger = logging.getLogger(__name__)
+
+class RealtimeClient(NetworkAdapter):
+    """
+    Production implementation of NetworkAdapter for Realtime API.
+    Handles actual WebSocket connections (Future Implementation).
+    Currently enforces 'No Network' policy effectively via structure.
+    """
+
     def connect(self):
-        """Establish connection (mock or real)."""
+        logger.info("[RealtimeClient] Connecting to Realtime API... (Placeholder)")
+        # Future: await websockets.connect(url)
         pass
 
-    @abstractmethod
     def send_audio(self, frame: AudioFrame):
-        """Send audio frame to the API."""
+        # Future: ws.send(frame.bytes)
         pass
 
-    @abstractmethod
     def receive_audio(self) -> Optional[AudioFrame]:
-        """Receive audio frame from the API."""
-        pass
+        # Future: data = await ws.recv()
+        return None
 
-    @abstractmethod
     def close(self):
-        """Close connection."""
+        logger.info("[RealtimeClient] Closing connection.")
         pass

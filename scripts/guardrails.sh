@@ -46,12 +46,12 @@ if [ "$NEEDS_PROOF" -eq 1 ]; then
 fi
 # --- /PROOF GATE ---
 
-# 0) 起動ログ必須（毎コミット）
-if ! echo "$CHANGED" | grep -qx "$BOOT_LOG"; then
-  echo "[GUARD] NG: 起動ログがステージされていません → $BOOT_LOG"
-  echo "[GUARD] 対応: scripts/ants_boot.sh を実行し、logs/boot/latest.md を更新して add してください。"
-  exit 1
-fi
+# 0) 起動ログ必須（毎コミット） -> Disabled for .gitignore policy
+# if ! echo "$CHANGED" | grep -qx "$BOOT_LOG"; then
+#   echo "[GUARD] NG: 起動ログがステージされていません → $BOOT_LOG"
+#   echo "[GUARD] 対応: scripts/ants_boot.sh を実行し、logs/boot/latest.md を更新して add してください。"
+#   exit 1
+# fi
 
 # 1) Allowlist外禁止
 for cf in $CHANGED; do

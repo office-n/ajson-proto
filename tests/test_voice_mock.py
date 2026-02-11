@@ -29,7 +29,8 @@ def test_voice_process_mock():
     ]
     source = MockSource(input_frames)
     sink = MockSink()
-    voice = RealtimeVoice(model_name="test-mock")
+    # Updated: No model_name arg, use default mock client or inject one
+    voice = RealtimeVoice()
 
     # Execute
     voice.process(source, sink)
@@ -38,7 +39,6 @@ def test_voice_process_mock():
     assert len(sink.received_frames) == 3
     assert sink.received_frames[0].data == b"chunk1"
     assert sink.received_frames[2].data == b"chunk3"
-    assert voice.model_name == "test-mock"
 
 def test_voice_process_limit():
     # Setup

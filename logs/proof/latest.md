@@ -21,6 +21,8 @@ e7a7134 docs: finalize SSOT with PR#50/49 merges and timestamp fix (#51)
 77c8378 feat: Phase9.6 Realtime API Skeleton (v2) (#48)
 
 ### staged diff (stat)
+ ajson/core/voice.py | 14 +++++++++-----
+ 1 file changed, 9 insertions(+), 5 deletions(-)
 
 ### NOTE
 - このログが出せない作業は「未検証/未完了」扱い

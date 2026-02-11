@@ -1,7 +1,7 @@
 import time
 from dataclasses import dataclass, field
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 
 @dataclass
 class AudioFrame:
@@ -24,16 +24,20 @@ class AudioSink(ABC):
         """Writes an audio frame."""
         pass
 
-from ajson.core.realtime_mock import RealtimeMock
-from ajson.core.realtime_client import RealtimeClient
+if TYPE_CHECKING:
+    from ajson.core.realtime_client import RealtimeClient
 
 class RealtimeVoice:
     """
     RealtimeVoice processing orchestrator.
     Uses an injected RealtimeClient (default: Mock) to handle API communication.
     """
-    def __init__(self, client: Optional[RealtimeClient] = None):
-        self.client = client or RealtimeMock()
+    def __init__(self, client: Optional['RealtimeClient'] = None):
+        if client is None:
+            from ajson.core.realtime_mock import RealtimeMock
+            self.client = RealtimeMock()
+        else:
+            self.client = client
         self._shutdown = False
 
     def process(self, source: AudioSource, sink: AudioSink, max_frames: int = 100):

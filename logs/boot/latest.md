@@ -1,5 +1,5 @@
 ## BOOT PACK
-- timestamp: 2026-02-11 13:45:23 +0900
+- timestamp: 2026-02-11 13:07:26 +0900
 - pwd: ajson-proto
 
 ### PACK LINK CHECK
@@ -12,11 +12,12 @@
 - hooksPath: .githooks
 
 ### git status (porcelain)
-M  docs/context/j_latest_context.md
+M  ajson/core/voice.py
  M logs/boot/latest.md
-M  logs/proof/latest.md
-?? docs/reports/ants_thread_report_2026_02_11_pr53_merge_phase9_7_kickoff.md
-?? docs/reports/git_log_2026_02_11.txt
+?? ajson/core/realtime_session.py
+?? docs/evidence/evidence_phase9_7_kickoff_2026_02_11.md
+?? docs/roadmap/phase9_7_kickoff.md
+?? tests/test_realtime_session.py
 
 ### git log -5
 0d0b883 docs: SSOT for PR#53 merge facts

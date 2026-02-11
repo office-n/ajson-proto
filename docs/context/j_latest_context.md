@@ -8,17 +8,13 @@ Last Updated: 2026-02-11 09:05 JST
 
 ## Git Context
 - **Repository**: office-n/ajson-proto
-- **Main Branch**: `main` (Last stable: `46b624f`)
-- **Previous HEAD**: `77c8378`
+- **Main Branch**: `main` (Last stable: `e7a7134`)
+- **Previous HEAD**: `46b624f`
 
-## Recent Changes (Phase 9.6 -> 9.7 Prep)
-- **Merged PR #48**: Realtime API Skeleton (Interfaces, Mock, Stub, Tests).
-- **Merged PR #50**: SSOT Update for PR#48 Merge Facts.
-- **Merged PR #49**: AJSON Spec v0.2 (Productivity Kit).
-- **Current Status**:
-  - Spec v0.2 Enforced (Worktree/SSOT/Workflow).
-  - Productivity Kit Active.
-  - Ready for Phase 9.7 Implementation.
+## Recent Changes (Phase 9.7 Prep -> v2.1 SSOT)
+- **Merged PR #52**: SSOT v2.0 Patch for Spec v0.2.
+- **Current Status**: Spec v2.1 Enforced (Cockpit + Governance).
+- **Next Phase**: Phase 9.7 (Realtime API / Remote Bridge Implementation).
 
 ## Key Files
 - `ajson/core/realtime_client.py`: Base interface.

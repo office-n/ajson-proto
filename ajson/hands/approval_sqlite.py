@@ -6,7 +6,7 @@ Activated via APPROVAL_STORE_DB environment variable.
 """
 import sqlite3
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, asdict
 import os
@@ -87,6 +87,16 @@ class SQLiteApprovalStore:
                 CREATE INDEX IF NOT EXISTS idx_requests_status 
                 ON requests(status)
             """)
+
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS allowlist_rules (
+                    rule_id TEXT PRIMARY KEY,
+                    host_pattern TEXT NOT NULL,
+                    port INTEGER NOT NULL,
+                    reason TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+            """)
             
             conn.commit()
     
@@ -107,7 +117,7 @@ class SQLiteApprovalStore:
             reason=reason,
             status="pending",
             metadata=metadata or {},
-            created_at=datetime.utcnow().isoformat()
+            created_at=datetime.now(timezone.utc).isoformat()
         )
         
         with sqlite3.connect(self.db_path) as conn:
@@ -159,8 +169,8 @@ class SQLiteApprovalStore:
             grant_id=str(uuid.uuid4()),
             request_id=request_id,
             scope=decision.scope,
-            expires_at=(datetime.utcnow() + timedelta(hours=1)).isoformat(),
-            created_at=datetime.utcnow().isoformat()
+            expires_at=(datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(),
+            created_at=datetime.now(timezone.utc).isoformat()
         )
         
         with sqlite3.connect(self.db_path) as conn:
@@ -211,7 +221,7 @@ class SQLiteApprovalStore:
         
         # Check expiration
         expires_at = datetime.fromisoformat(row['expires_at'])
-        if datetime.utcnow() > expires_at:
+        if datetime.now(timezone.utc) > expires_at:
             return False
         
         # Check scope
@@ -222,7 +232,7 @@ class SQLiteApprovalStore:
     
     def get_active_grants(self) -> List[ApprovalGrant]:
         """Get all active (non-expired) grants"""
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row

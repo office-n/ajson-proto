@@ -27,6 +27,8 @@ log() {
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
 }
 
+START_TS=$(date +%s.%N)
+
 # Check if in cooldown period
 check_cooldown() {
     if [ -f "$LAST_RESTART_FILE" ]; then

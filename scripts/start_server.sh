@@ -4,6 +4,10 @@
 
 set -e
 
+# --- Instrumentation ---
+START_TS=$(date +%s.%N)
+
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 PID_FILE="$PROJECT_ROOT/run/uvicorn.pid"
@@ -46,7 +50,9 @@ echo "[$(date +'%Y-%m-%d %H:%M:%S')] PID saved to: $PID_FILE"
 # Wait a moment and verify it started
 sleep 2
 if ps -p "$SERVER_PID" > /dev/null 2>&1; then
-    echo "[$(date +'%Y-%m-%d %H:%M:%S')] Server verified running"
+    END_TS=$(date +%s.%N)
+    DURATION=$(echo "$END_TS - $START_TS" | bc)
+    echo "[$(date +'%Y-%m-%d %H:%M:%S')] Server verified running (Startup: ${DURATION}s)"
     exit 0
 else
     echo "[$(date +'%Y-%m-%d %H:%M:%S')] ERROR: Server failed to start"

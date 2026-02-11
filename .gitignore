@@ -42,3 +42,4 @@ uploads/*
 !uploads/.gitkeep
 .ants/
 run/*.pid
+run/requirements.hash

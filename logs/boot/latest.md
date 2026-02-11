@@ -1,29 +1,12 @@
-## BOOT PACK
-- timestamp: 2026-02-11 13:46:48 +0900
-- pwd: ajson-proto
+# Boot Log
+Timestamp: 2026-02-11 22:05:04 +0900
+Mode: **FAST**
 
-### PACK LINK CHECK
-- .cursorrules: OK
-- .githooks/pre-commit: OK
-- scripts/guardrails.sh: OK
-- scripts/proof_pack.sh: OK
-
-### GIT
-- hooksPath: .githooks
-
-### git status (porcelain)
- M logs/boot/latest.md
-?? docs/evidence/evidence_ssot_status_board_2026_02_11.md
-?? docs/reports/ants_thread_report_2026_02_11_pr53_merge_phase9_7_kickoff.md
-?? docs/reports/git_log_2026_02_11.txt
-?? docs/ssot/
-
-### git log -5
-eae4efe docs: add AJSON spec v2.1 (cockpit + governance) (#53)
-e7a7134 docs: finalize SSOT with PR#50/49 merges and timestamp fix (#51)
-46b624f docs: AJSON spec v0.2 (cockpit + connectors + RPA + local workspace + costs) (#49)
-3e28013 docs: SSOT for PR#48 merge facts (#50)
-77c8378 feat: Phase9.6 Realtime API Skeleton (v2) (#48)
-
-### NOTE
-- non-git folders are 'All Green' if PACK LINK CHECK is OK and logs update.
+## Timings
+- Dependencies: Skipped (Hash Match)
+- **Dependencies**: .022352000s
+- Pack Check: OK
+- **Pack Check**: .204991000s
+- Tests: FAST (Smoke/Sanity Passed)
+- **Testing (FAST)**: 2.160524000s
+## Total Time: 2.469450000s

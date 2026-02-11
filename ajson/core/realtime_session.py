@@ -1,7 +1,8 @@
 import enum
 import logging
 from typing import Optional, Callable
-from ajson.core.realtime_client import RealtimeClient
+from ajson.core.network_adapter import NetworkAdapter
+import logging
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class RealtimeSession:
     Strictly follows NETWORK DENY policy by checking feature flags
     before delegating to the underlying client.
     """
-    def __init__(self, client: RealtimeClient, allow_network: bool = False):
+    def __init__(self, client: NetworkAdapter, allow_network: bool = False):
         self._client = client
         self._allow_network = allow_network
         self._state = SessionState.INIT

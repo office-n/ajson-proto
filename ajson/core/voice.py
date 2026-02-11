@@ -25,14 +25,14 @@ class AudioSink(ABC):
         pass
 
 if TYPE_CHECKING:
-    from ajson.core.realtime_client import RealtimeClient
+    from ajson.core.network_adapter import NetworkAdapter
 
 class RealtimeVoice:
     """
     RealtimeVoice processing orchestrator.
-    Uses an injected RealtimeClient (default: Mock) to handle API communication.
+    Uses an injected NetworkAdapter (default: Mock) to handle API communication.
     """
-    def __init__(self, client: Optional['RealtimeClient'] = None):
+    def __init__(self, client: Optional['NetworkAdapter'] = None):
         if client is None:
             from ajson.core.realtime_mock import RealtimeMock
             self.client = RealtimeMock()

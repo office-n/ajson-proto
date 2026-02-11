@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import MagicMock
-from ajson.core.realtime_client import RealtimeClient
+from ajson.core.network_adapter import NetworkAdapter
 from ajson.core.realtime_session import RealtimeSession, SessionState
 
-class MockClient(RealtimeClient):
+class MockClient(NetworkAdapter):
     def connect(self): pass
     def send_audio(self, frame): pass
     def receive_audio(self): return None
@@ -59,6 +59,9 @@ def test_send_text_no_network(mock_client):
     assert session.state == SessionState.READY
 
 def test_close(mock_client):
-    session = RealtimeSession(mock_client)
+    mock_client.close = MagicMock()
+    session = RealtimeSession(mock_client, allow_network=True)
+    session.connect()
     session.close()
     assert session.state == SessionState.CLOSED
+    mock_client.close.assert_called_once()

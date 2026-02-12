@@ -10,8 +10,9 @@ from ajson.hands.approval import ApprovalDecision
 class TestNetworkSecurity:
     
     @pytest.fixture
-    def mock_allowlist(self):
-        allowlist = Allowlist(db_path=":memory:")
+    def mock_allowlist(self, tmp_path):
+        db_file = tmp_path / "test_allowlist.db"
+        allowlist = Allowlist(db_path=str(db_file))
         allowlist.add_rule("api.example.com", 443, "Test Rule")
         return allowlist
 
@@ -24,6 +25,11 @@ class TestNetworkSecurity:
     @pytest.fixture
     def mock_logger(self):
         return MagicMock()
+
+    def test_network_default_deny(self):
+        """Verify that the global security policy is set to DENY."""
+        import ajson.core.network
+        assert ajson.core.network.allow_network is False, "Security Policy Violation: allow_network must be False"
 
     def test_allowlist_check_success(self, mock_allowlist):
         # Should not raise
@@ -69,8 +75,8 @@ class TestNetworkSecurity:
     def test_connector_success(self, mock_allowlist, mock_approval, mock_logger):
         # Setup mock grant
         grant = ApprovalGrant(
-            grant_id="test", request_id="req", scope="api.example.com", 
-            expires_at="future", created_at="now"
+            grant_id="test", request_id="req", operation="api.example.com",
+            scope=["api.example.com"], granted_at="now", expires_at="future"
         )
         mock_approval.get_active_grants.return_value = [grant]
         

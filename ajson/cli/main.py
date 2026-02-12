@@ -2,6 +2,7 @@
 import argparse
 import sys
 import json
+import os
 from datetime import datetime, timedelta, timezone
 from typing import List
 
@@ -70,10 +71,21 @@ def main():
     deny_parser.add_argument("request_id", help="Request ID to deny")
     deny_parser.add_argument("--reason", required=True, help="Reason for denial")
 
+    # allowlist
+    allowlist_parser = subparsers.add_parser("allowlist", help="Manage allowlist")
+    allowlist_subs = allowlist_parser.add_subparsers(dest="allowlist_command", required=True)
+    
+    # allowlist add
+    allowlist_add = allowlist_subs.add_parser("add", help="Add a rule to allowlist")
+    allowlist_add.add_argument("host", help="Host pattern (e.g. *.example.com)")
+    allowlist_add.add_argument("port", type=int, help="Port number (0 for any)")
+    allowlist_add.add_argument("--reason", required=True, help="Reason for allowing")
+
     args = parser.parse_args()
     
     try:
-        store = SQLiteApprovalStore()
+        db_path = os.environ.get("APPROVAL_STORE_DB", "data/approvals.db")
+        store = SQLiteApprovalStore(db_path=db_path)
     except Exception as e:
         print(f"Error initializing approval store: {e}", file=sys.stderr)
         sys.exit(1)
@@ -84,6 +96,12 @@ def main():
         approve_request(store, args.request_id, args.scope, args.ttl)
     elif args.command == "deny":
         deny_request(store, args.request_id, args.reason)
+    elif args.command == "allowlist":
+        if args.allowlist_command == "add":
+            from ajson.hands.allowlist import Allowlist
+            allowlist_mgr = Allowlist(db_path=store.db_path)
+            allowlist_mgr.add_rule(args.host, args.port, args.reason)
+            print(f"Added allowlist rule: {args.host}:{args.port}")
     
 if __name__ == "__main__":
     main()

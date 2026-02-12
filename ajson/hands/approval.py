@@ -7,8 +7,8 @@ Provides:
 - ApprovalGrant: Approved permission with scope/expiry
 - ApprovalStore: In-memory storage for requests/grants
 """
+from ajson.hands.domain import ApprovalRequest, ApprovalDecision, ApprovalGrant
 from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
 from enum import Enum
 import uuid
@@ -20,71 +20,6 @@ class ApprovalStatus(Enum):
     APPROVED = "approved"
     DENIED = "denied"
     EXPIRED = "expired"
-
-
-@dataclass
-class ApprovalRequest:
-    """Approval request for a gated operation"""
-    request_id: str
-    operation: str
-    category: str  # OperationCategory value
-    reason: str  # Why approval is needed
-    requested_at: str  # ISO 8601 timestamp
-    requested_by: str = "system"  # Future: user ID
-    status: str = ApprovalStatus.PENDING.value
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to JSON-serializable dict"""
-        return asdict(self)
-
-
-@dataclass
-class ApprovalDecision:
-    """Approval decision (approve or deny)"""
-    request_id: str
-    decision: str  # "approve" or "deny"
-    reason: str
-    decided_by: str = "admin"  # Future: user ID
-    decided_at: str = ""  # ISO 8601 timestamp
-    scope: List[str] = field(default_factory=list)  # For approve: allowed operations
-    ttl_seconds: int = 300  # Time to live for grant (default 5 min)
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to JSON-serializable dict"""
-        return asdict(self)
-
-
-@dataclass
-class ApprovalGrant:
-    """Approved permission grant"""
-    grant_id: str
-    request_id: str
-    operation: str
-    scope: List[str]  # Allowed operations
-    granted_at: str  # ISO 8601 timestamp
-    expires_at: str  # ISO 8601 timestamp
-    granted_by: str = "admin"
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to JSON-serializable dict"""
-        return asdict(self)
-    
-    def is_expired(self) -> bool:
-        """Check if grant has expired"""
-        now = datetime.now()
-        expires = datetime.fromisoformat(self.expires_at)
-        return now > expires
-    
-    def matches_scope(self, operation: str) -> bool:
-        """Check if operation matches grant scope"""
-        if not self.scope:
-            return True  # Empty scope = matches original operation only
-        for pattern in self.scope:
-            if pattern.lower() in operation.lower():
-                return True
-        return False
 
 
 class ApprovalStore:
@@ -101,17 +36,23 @@ class ApprovalStore:
     def create_request(self, operation: str, category: str, reason: str, metadata: Optional[Dict[str, Any]] = None) -> ApprovalRequest:
         """Create a new approval request"""
         request_id = str(uuid.uuid4())
-        now = datetime.now().isoformat()
-        
+        # Use centralized time utility if available, else standard datetime
+        try:
+            from ajson.utils.time import get_utc_iso
+            now_iso = get_utc_iso()
+        except ImportError:
+             from datetime import timezone
+             now_iso = datetime.now(timezone.utc).isoformat()
+
         request = ApprovalRequest(
             request_id=request_id,
             operation=operation,
             category=category,
             reason=reason,
-            requested_at=now,
+            created_at=now_iso,  # Standardized field
+            status=ApprovalStatus.PENDING.value,
             metadata=metadata or {}
         )
-        
         self.requests[request_id] = request
         return request
     

@@ -72,10 +72,10 @@ class Allowlist:
     def add_rule(self, host_pattern: str, port: int, reason: str):
         """Add a rule to the allowlist."""
         import uuid
-        from datetime import datetime, timezone
+        from ajson.utils.time import get_utc_iso
         
         rule_id = str(uuid.uuid4())
-        created_at = datetime.now(timezone.utc).isoformat()
+        created_at = get_utc_iso()
         
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(

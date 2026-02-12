@@ -55,6 +55,22 @@ python -m ajson.cli deny <request_id> --reason <reason>
 python -m ajson.cli deny 15582f3a-xxxx --reason "Security Policy Violation"
 ```
 
+### 4. 許可リスト管理 (`allowlist`)
+静的な許可ルールを追加します。
+
+```bash
+python -m ajson.cli allowlist add <host> <port> --reason <reason>
+```
+
+- **host**: ホスト名またはパターン (例: `*.example.com`, `api.github.com`)
+- **port**: ポート番号 (0 は全ポート許可)
+- **--reason**: 許可理由 (必須)
+
+**実行例**:
+```bash
+python -m ajson.cli allowlist add api.openai.com 443 --reason "LLM Backend"
+```
+
 ## エラー時の対応
 - `Error initializing approval store`: データベースファイル (`data/approvals.db`) へのアクセス権限を確認してください。
 - `Error ...`: エラーメッセージに従い、入力値やシステム状態を確認してください。

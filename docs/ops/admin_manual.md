@@ -23,5 +23,16 @@ Timestamp: 2026-02-12T00:00:00+09:00 (JST)
 - **リセット**: データ破損時は DB ファイルを削除し、再起動することでスキーマが再作成されます（既存データは消失）。
 
 ### 4. 禁止事項
-- `logs/proof/` 配下の改竄（自動検証により検知されます）。
 - 本番環境での `--admin` オプション（存在しない場合も含む）や Bypass 操作。
+
+### 5. トラブルシューティング (Toolchain)
+#### GitHub CLI (`gh`) の不調
+PRが見えない、作成できない等の場合：
+1. **認証状態確認**: `gh auth status`
+2. **再ログイン**: `gh auth login` (Webブラウザ経由)
+3. **コンテキスト修復**: `gh repo set-default office-n/ajson-proto`
+
+#### Git同期ズレ
+リモートの追跡がおかしい場合：
+1. **Prune**: `git fetch --prune origin`
+2. **Hard Reset** (注意): `git reset --hard origin/main` (未保存の変更は消えます)

@@ -10,3 +10,5 @@
 - ajson/
 - tests/
 - tickets/
+- pr_body*.md
+- run/

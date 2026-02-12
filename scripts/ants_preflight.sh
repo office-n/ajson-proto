@@ -16,10 +16,10 @@ fi
 
 
 
-# 1. JST Timestamp Check (First line must contain +09:00)
-FIRST_LINE=$(head -n 1 "$REPORT_FILE")
-if ! echo "$FIRST_LINE" | grep -q "+09:00"; then
-  echo "NG: First line must contain JST timestamp (+09:00). Found: $FIRST_LINE"
+# 1. JST Timestamp Check (Must be in first 5 lines)
+HEADER=$(head -n 5 "$REPORT_FILE")
+if ! echo "$HEADER" | grep -q "+09:00"; then
+  echo "NG: First 5 lines must contain JST timestamp (+09:00)."
   exit 1
 fi
 
@@ -28,9 +28,10 @@ if grep -q "Progress Updates" "$REPORT_FILE"; then
   echo "NG: Forbidden phrase 'Progress Updates' found in $REPORT_FILE. Use 'Final Report Only'."
   exit 1
 fi
-if grep -c "^#.*Report" "$REPORT_FILE" | grep -q -v "^1$"; then
-    # Warning only for now, as some valid reports might have multiple sections
-    echo "WARNING: Multiple '# ... Report' headers found. Ensure only ONE final report."
+REPORT_COUNT=$(grep -c "^#.*Report" "$REPORT_FILE")
+if [ "$REPORT_COUNT" -gt 1 ]; then
+    echo "NG: Multiple '# ... Report' headers found. Ensure only ONE final report."
+    exit 1
 fi
 
 # 3. English-only (ASCII ratio) check

@@ -1,5 +1,5 @@
 # Ants Capacity Limits (SSOT)
-Last Updated: 2026-02-13T02:15:00+09:00 (JST)
+Last Updated: 2026-02-13T15:45:00+09:00 (JST)
 
 ## 概要
 ChainRun における連鎖タスク処理能力（キャパシティ）の限界値を定義・記録する文書。
@@ -16,7 +16,9 @@ ChainRun における連鎖タスク処理能力（キャパシティ）の限�
 | :--- | :--- | :--- | :--- | :--- |
 | v1.8 | 8 | 0 | Toolchain (GH API) | Success (Manual PR) |
 | v1.9 | Loop 5 | 0 | TimeBudget (90min) | Success (Manual PR) |
-| **v2.1** | **Full** | **0** | **TimeBudget (InProgress)** | **Running** |
+| v2.1 | Full | 0 | TimeBudget (Completed) | Success |
+| v2.3 | Phase10 Pre | 1 (Flash quota) | Flash quota exceeded | Bridge → Claude |
+| **v2.4** | **Soak 100** | **0** | **TimeBudget ACHIEVED** | **Success (5.2h)** |
 
 ## 3. Limit Factors (限界要因パターン)
 

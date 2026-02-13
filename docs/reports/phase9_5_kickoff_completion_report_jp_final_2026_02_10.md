@@ -30,7 +30,7 @@ PR #44は正規フロー（jarvisrv承認→office-nマージ）でSSOT化され
 - **PR**: #45 `ci: enforce JP-only gate in preflight`
   - URL: https://github.com/office-n/ajson-proto/pull/45
   - 内容: `scripts/ants_preflight.sh` に以下を追加
-    1. "Progress Updates" という文字列の検出（即NG）
+    1. "進捗報告" という文字列の検出（即NG）
     2. ASCII比率 90% 超過の検出（英語レポートとみなしてNG）
 
 ## 4. リスク・次の一手・展望

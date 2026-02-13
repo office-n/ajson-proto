@@ -1,28 +1,51 @@
 ## PROOF PACK
-- timestamp: 2026-02-11 13:46:49 +0900
+- timestamp: 2026-02-14 02:00:47 +0900
 - pwd: ajson-proto
 
 ### GIT
 - hooksPath: .githooks
 
 ### git status (porcelain)
+A  .github/workflows/phase10-audit.yml
+M  docs/ops/admin_manual.md
+M  docs/ops/ants_boot_block.md
+M  docs/ops/ants_reporting_policy.md
+M  docs/ops/production_readiness_checklist.md
+M  docs/reports/chainrun_v1_7_final_2026-02-11T23:26:38+09:00.md
+M  docs/reports/phase9_5_kickoff_completion_report_jp_final_2026_02_10.md
  M logs/boot/latest.md
  M logs/proof/latest.md
-?? docs/evidence/evidence_ssot_status_board_2026_02_11.md
-?? docs/reports/ants_thread_report_2026_02_11_pr53_merge_phase9_7_kickoff.md
-?? docs/reports/git_log_2026_02_11.txt
-?? docs/ssot/
+M  scripts/lint_forbidden_strings.sh
+A  scripts/phase10_audit.sh
+?? docs/evidence/audit_report_20260213_235227.md
+?? docs/evidence/audit_report_20260213_235402.md
+?? docs/evidence/audit_report_20260214_014215.md
+?? docs/evidence/audit_report_20260214_014332.md
+?? docs/evidence/audit_report_20260214_015634.md
+?? docs/evidence/runlog_chainrun_v2_3_2026-02-13T02:45:32+09:00.md
+?? docs/evidence/runlog_chainrun_v2_4_2026-02-13T15:49:13+09:00.md
+?? docs/evidence/runlog_devrun_v2_8_2026-02-13T23:40:10+09:00.md
+?? docs/evidence/runlog_devrun_v3_0_2026-02-14T01:53:17+09:00.md
+?? tests/uploads/
 
 ### git log -5
-eae4efe docs: add AJSON spec v2.1 (cockpit + governance) (#53)
-e7a7134 docs: finalize SSOT with PR#50/49 merges and timestamp fix (#51)
-46b624f docs: AJSON spec v0.2 (cockpit + connectors + RPA + local workspace + costs) (#49)
-3e28013 docs: SSOT for PR#48 merge facts (#50)
-77c8378 feat: Phase9.6 Realtime API Skeleton (v2) (#48)
+3f2d0ff docs: finalize M1 Cockpit MVP with mandatory proof logs
+ebd8e23 docs: finalize Phase 9.9 docs & guardrails enhancement (DevRun v2.6)
+fb1852e fix: restore missing ABC imports in network.py
+63fd1d0 fix: resolve CI collection error and deprecation warnings
+49e09ef chore: update boot log and finalize v1.7 report
 
 ### staged diff (stat)
- ajson/core/voice.py | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ .github/workflows/phase10-audit.yml                | 33 ++++++++
+ docs/ops/admin_manual.md                           | 18 ++++
+ docs/ops/ants_boot_block.md                        |  2 +-
+ docs/ops/ants_reporting_policy.md                  |  4 +-
+ docs/ops/production_readiness_checklist.md         | 18 ++--
+ ...hainrun_v1_7_final_2026-02-11T23:26:38+09:00.md |  2 +-
+ ...ickoff_completion_report_jp_final_2026_02_10.md |  2 +-
+ scripts/lint_forbidden_strings.sh                  |  6 +-
+ scripts/phase10_audit.sh                           | 97 ++++++++++++++++++++++
+ 9 files changed, 169 insertions(+), 13 deletions(-)
 
 ### NOTE
 - このログが出せない作業は「未検証/未完了」扱い

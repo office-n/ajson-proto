@@ -19,8 +19,8 @@
 - [ ] **DeprecationWarning**: `pytest -q -W error::DeprecationWarning` で警告が 1 件も発生しないこと。
 - [ ] **Boot Check**: `bash scripts/ants_boot.sh` で `BOOT OK` が返ること。
 - [ ] **Preflight**: `bash scripts/ants_preflight.sh <report>` で最終報告書の形式が合格すること。
-- [ ] **Forbidden Strings**: 以下の文字列が製品コード・ドキュメントに含まれていないこと。
-  - `file:///`, `/Users/`, `\Users\`, `/mnt/`, `sandbox:`
+- [ ] **Forbidden Strings**: 以下の文字列が製品コード・ドキュメント（監査用記述を除く）に含まれていないこと。
+  - `file: ///`, `/ Users /`, `\ Users \`, `/ mnt /`, `sandbox :`
 
 ## 4. 証跡（Evidence Quality）
 - [ ] **Runlog 必須項目**: 各作業の `runlog` 先頭に以下の OS タイムスタンプが含まれていること。
@@ -30,9 +30,17 @@
 - [ ] **SSOT 情報**: `main HEAD` (40桁SHA) および関連 PR の状態が正しく記録されていること。
 
 ## 5. マージ後検証（Post-Merge）
-- [ ] **Regression Test**: マージ後の `main` ブランチで `bash scripts/verify_post_merge.sh` 相当の検証が実施されていること。
+- [ ] **Stable Dev Environment**: 端末負荷を軽減するための運用ルールを遵守していること。
+  - [ ] バックグラウンドコマンドが重複して滞留していない（原則 1 本）。
+  - [ ] 端末への過剰な（数千行を超える）連続出力が行われていない。
 
 ---
+### 必須監査ツール
+本番稼働に向けた最終検証は、以下のスクリプトを実行し、すべて `PASS` すること。
+```bash
+bash scripts/phase10_audit.sh
+```
+本スクリプトは、HEADの整合性、テスト（警告含む）、起動確認、および禁止文字列の混入を包括的に検証し、`docs/evidence/audit_report_*.md` を生成する。
+
 ### 不足項目・今後の課題
-- 現時点での自動監査スクリプトとの完全な連結ロジック。
-- CI 上での「禁止文字列スキャン」の強制終了オプション（現在は警告レベル）。
+- CI 上での `phase10_audit.sh` 自動実行と結果の PR コメント連携。

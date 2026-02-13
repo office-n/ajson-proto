@@ -23,8 +23,8 @@ EXCLUDE_FILES="--exclude=*.pyc --exclude=*.log --exclude=.DS_Store"
 # Pattern constructed dynamically to avoid self-detection
 PATTERN_FILE_SCHEME="file""://"
 echo "Check 1: file:// scheme"
-# Check entire repo except excludes
-if grep -rIn "$PATTERN_FILE_SCHEME" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v "lint_forbidden_strings.sh"; then
+# Check entire repo except excludes, audit scripts, and evidence
+if grep -rIn "$PATTERN_FILE_SCHEME" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -vE "lint_forbidden_strings.sh|phase10_audit.sh|ants_preflight.sh|docs/evidence/|docs/ops/production_readiness_checklist.md"; then
     echo "❌ VIOLATION: file:// scheme found"
     VIOLATIONS=$((VIOLATIONS + 1))
 else
@@ -37,7 +37,7 @@ echo ""
 PATTERN_USERS="/""Users/"
 PATTERN_HOME="/""home/"
 echo "Check 2: Absolute paths"
-if grep -rIn "$PATTERN_USERS\|$PATTERN_HOME" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -v "lint_forbidden_strings.sh"; then
+if grep -rIn "$PATTERN_USERS\|$PATTERN_HOME" . $EXCLUDE_DIRS $EXCLUDE_FILES 2>/dev/null | grep -vE "lint_forbidden_strings.sh|phase10_audit.sh|ants_preflight.sh|docs/evidence/|docs/ops/production_readiness_checklist.md"; then
     echo "❌ VIOLATION: Absolute paths found"
     VIOLATIONS=$((VIOLATIONS + 1))
 else

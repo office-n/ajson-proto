@@ -4,6 +4,7 @@
 - .gitignore
 - requirements.txt
 - scripts/
+- .github/
 - logs/boot/latest.md
 - logs/proof/latest.md
 - docs/

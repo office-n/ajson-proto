@@ -5,7 +5,9 @@ Expansion: JSON audit logs + PolicyDecision enforcement
 """
 from typing import Dict, Any, List, Optional
 import json
+import os
 import subprocess
+from ajson.hands.fs_connector import FileSystemConnector
 from ajson.hands.policy import (
     ApprovalPolicy,
     PolicyDecision,
@@ -132,7 +134,11 @@ class ToolRunner:
             result = self._simulate_execution(tool_name, args, decision, category, reason)
         else:
             # ALLOW: actual execution would happen here
-            result = self._execute_actual(tool_name, args, decision, category, reason)
+            # Special handling for M2 FS Tools
+            if tool_name.endswith("_worktree"):
+                result = self._execute_fs_tool(tool_name, args)
+            else:
+                result = self._execute_actual(tool_name, args, decision, category, reason)
         
         # Add legacy fields for backwards compatibility
         result["requires_approval"] = requires_approval
@@ -255,6 +261,49 @@ class ToolRunner:
             "status": "executed",
             "output": f"EXECUTED: {tool_name} with {json.dumps(args)}"
         }
+
+    def _execute_fs_tool(self, tool_name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Execute File System Connector tools for M2"""
+        # In a real implementation, worktree_root would come from context
+        # For MVP, we use a default or task-specific one if provided
+        worktree_root = args.get("worktree_root", "worktrees/default")
+        connector = FileSystemConnector(worktree_root)
+        
+        try:
+            if tool_name == "ls_worktree":
+                out = connector.list_dir(args.get("path", "."))
+                msg = f"Files: {out}"
+            elif tool_name == "read_worktree":
+                out = connector.read_file(args.get("path"))
+                msg = f"Content of {args.get('path')}:\n{out}"
+            elif tool_name == "write_worktree":
+                connector.write_file(args.get("path"), args.get("content", ""))
+                msg = f"Wrote to {args.get('path')}"
+            elif tool_name == "mkdir_worktree":
+                connector.mkdir(args.get("path"))
+                msg = f"Created directory {args.get('path')}"
+            elif tool_name == "move_worktree":
+                connector.move(args.get("src"), args.get("dst"))
+                msg = f"Moved {args.get('src')} to {args.get('dst')}"
+            elif tool_name == "remove_worktree":
+                connector.remove(args.get("path"), permanent=args.get("permanent", False))
+                msg = f"Removed {args.get('path')} (permanent={args.get('permanent', False)})"
+            else:
+                raise ValueError(f"Unknown FS tool: {tool_name}")
+                
+            return {
+                "executed": True,
+                "tool": tool_name,
+                "output": msg,
+                "status": "success"
+            }
+        except Exception as e:
+            return {
+                "executed": False,
+                "tool": tool_name,
+                "error": str(e),
+                "status": "error"
+            }
     
     def _log_audit(
         self,

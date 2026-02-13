@@ -61,6 +61,8 @@ class ApprovalPolicy:
     ALLOWLIST = [
         # File operations (readonly)
         "ls", "cat", "grep", "rg", "find",
+        # M2: File System Connector (M2 MVP)
+        "ls_worktree", "read_worktree", "write_worktree", "mkdir_worktree", "move_worktree", "remove_worktree",
         # Testing
         "pytest -q", "pytest --collect-only",
         # Git readonly (support both "git status" and "git_status" forms)

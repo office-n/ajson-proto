@@ -15,13 +15,26 @@ if [ ! -f "$REPORT_FILE" ]; then
 fi
 
 
-# 1. Forbidden phrases check
+
+# 1. JST Timestamp Check (Must be in first 5 lines)
+HEADER=$(head -n 5 "$REPORT_FILE")
+if ! echo "$HEADER" | grep -q "+09:00"; then
+  echo "NG: First 5 lines must contain JST timestamp (+09:00)."
+  exit 1
+fi
+
+# 2. Forbidden phrases check
 if grep -q "Progress Updates" "$REPORT_FILE"; then
   echo "NG: Forbidden phrase 'Progress Updates' found in $REPORT_FILE. Use 'Final Report Only'."
   exit 1
 fi
+REPORT_COUNT=$(grep -c "^#.*Report" "$REPORT_FILE")
+if [ "$REPORT_COUNT" -gt 1 ]; then
+    echo "NG: Multiple '# ... Report' headers found. Ensure only ONE final report."
+    exit 1
+fi
 
-# 2. English-only (ASCII ratio) check
+# 3. English-only (ASCII ratio) check
 # Strategy: Count total bytes vs ASCII bytes. If ASCII > 90%, it's likely English-only.
 # Using 'wc -c' for total bytes and 'tr -cd "[[:print:]]\t\n" | wc -c' for ASCII printable.
 TOTAL_BYTES=$(wc -c < "$REPORT_FILE")
@@ -36,5 +49,6 @@ if [ "$TOTAL_BYTES" -gt 0 ]; then
   fi
 fi
 
-echo "OK: Preflight passed for $REPORT_FILE (ASCII: ${RATIO}%)"
+echo "OK: Preflight passed for $REPORT_FILE (JST OK, ASCII: ${RATIO}%)"
 exit 0
+

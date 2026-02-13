@@ -53,6 +53,16 @@ def deny_request(store: SQLiteApprovalStore, request_id: str, reason: str):
         print(f"Error denying request: {e}", file=sys.stderr)
         sys.exit(1)
 
+
+def cockpit_start():
+    try:
+        from ajson.cli.cockpit import Cockpit
+        ui = Cockpit()
+        ui.run()
+    except Exception as e:
+        print(f"Error starting cockpit: {e}", file=sys.stderr)
+        sys.exit(1)
+
 def main():
     parser = argparse.ArgumentParser(description="AJSON Approval CLI")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -81,8 +91,15 @@ def main():
     allowlist_add.add_argument("port", type=int, help="Port number (0 for any)")
     allowlist_add.add_argument("--reason", required=True, help="Reason for allowing")
 
+    # cockpit
+    subparsers.add_parser("cockpit", help="Start M1 Cockpit MVP")
+
     args = parser.parse_args()
     
+    if args.command == "cockpit":
+        cockpit_start()
+        return
+
     try:
         db_path = os.environ.get("APPROVAL_STORE_DB", "data/approvals.db")
         store = SQLiteApprovalStore(db_path=db_path)

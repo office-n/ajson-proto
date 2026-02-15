@@ -1,5 +1,5 @@
 ## BOOT PACK
-- timestamp: 2026-02-14 18:17:36 +0900
+- timestamp: 2026-02-15 17:11:23 +0900
 - pwd: ajson-proto
 
 ### PACK LINK CHECK
@@ -32,15 +32,15 @@
 ?? docs/evidence/runlog_devrun_v3_4_2026-02-14T10:20:26+09:00.md
 ?? docs/evidence/runlog_devrun_v3_4_20260214_163705.md
 ?? docs/evidence/runlog_devrun_v3_4_20260214_173646.md
-?? docs/evidence/walkthrough_m3_final.md
+?? pr_body_m3.md
 ?? tests/uploads/
 
 ### git log -5
+4bc20b4 docs: sanitize walkthrough + align SSOT counts
 739d780 feat(m3): Implement SQLite-backed SchedulerStore with evidence hashing placeholder
 b84c1cf feat: M3 Scheduler/SSOT preparation (design doc & scaffold)
 23b8ca5 feat: integrate Phase 10 audit into CI and update allowlist
 3f2d0ff docs: finalize M1 Cockpit MVP with mandatory proof logs
-ebd8e23 docs: finalize Phase 9.9 docs & guardrails enhancement (DevRun v2.6)
 
 ### NOTE
 - non-git folders are 'All Green' if PACK LINK CHECK is OK and logs update.

@@ -1,16 +1,14 @@
 ## PROOF PACK
-- timestamp: 2026-02-14 18:18:01 +0900
+- timestamp: 2026-02-15 17:19:25 +0900
 - pwd: ajson-proto
 
 ### GIT
 - hooksPath: .githooks
 
 ### git status (porcelain)
-A  docs/evidence/audit_report_20260214_181737.md
-A  docs/evidence/boss_op_card_m3_merge.md
-A  docs/evidence/walkthrough_m3_final.md
- M logs/boot/latest.md
+M  logs/boot/latest.md
  M logs/proof/latest.md
+A  pr_body_m3.md
 ?? docs/evidence/audit_report_20260213_235227.md
 ?? docs/evidence/audit_report_20260213_235402.md
 ?? docs/evidence/audit_report_20260214_014215.md
@@ -33,17 +31,16 @@ A  docs/evidence/walkthrough_m3_final.md
 ?? tests/uploads/
 
 ### git log -5
+4bc20b4 docs: sanitize walkthrough + align SSOT counts
 739d780 feat(m3): Implement SQLite-backed SchedulerStore with evidence hashing placeholder
 b84c1cf feat: M3 Scheduler/SSOT preparation (design doc & scaffold)
 23b8ca5 feat: integrate Phase 10 audit into CI and update allowlist
 3f2d0ff docs: finalize M1 Cockpit MVP with mandatory proof logs
-ebd8e23 docs: finalize Phase 9.9 docs & guardrails enhancement (DevRun v2.6)
 
 ### staged diff (stat)
- docs/evidence/audit_report_20260214_181737.md | 11 +++++++
- docs/evidence/boss_op_card_m3_merge.md        | 23 ++++++++++++++
- docs/evidence/walkthrough_m3_final.md         | 45 +++++++++++++++++++++++++++
- 3 files changed, 79 insertions(+)
+ logs/boot/latest.md |  6 +++---
+ pr_body_m3.md       | 28 ++++++++++++++++++++++++++++
+ 2 files changed, 31 insertions(+), 3 deletions(-)
 
 ### NOTE
 - このログが出せない作業は「未検証/未完了」扱い

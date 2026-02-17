@@ -26,3 +26,5 @@
 1) SSOT表記（146 baseline / 151 M3追加）をこの形で固定して良いか
 2) scheduler_tasks schema（最小項目）と state 遷移がMVPとして妥当か
 3) evidence_hash 正規化ルール（何を含め/除外するか）が監査目的に合うか
+- **Runlog**: docs/evidence/runlog_m3_truegreen_20260217_205552.md
+- **Audit**: ALL PASS (Exit 0)

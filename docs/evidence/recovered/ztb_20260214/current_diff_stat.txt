@@ -1,8 +1,0 @@
-commit 8b0f937cc07d9acb55d92c25b70888b865d508b7
-Author: office-n <102186838+office-n@users.noreply.github.com>
-Date:   Sat Feb 14 02:35:04 2026 +0900
-
-    docs: finalize Runbook for minimal Boss operation
-
- docs/RUNBOOK_USER.md | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)

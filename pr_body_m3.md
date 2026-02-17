@@ -10,7 +10,7 @@
 
 ## 検証結果
 - **ベースラインSSOT**: 146 passed (PR #61/#62)
-  - 証跡: `docs/evidence/runlog_v1_3_2026-02-11.md`
+  - 証跡: runlog_v1_3_2026-02-11.md (Archived in evidence-archive/m3-runlogs-keep)
 - **M3 (feat/m3-scheduler)**: **151 passed** (新規テスト5件込み)
   - 証跡: `docs/evidence/walkthrough_m3_final.md`
 - **boot/preflight/phase10_audit**: **PASS**

@@ -30,3 +30,12 @@ c9d759d docs(evidence): finalize proof pack with 152 passed and audit pass
 
 ### NOTE
 - このログが出せない作業は「未検証/未完了」扱い
+
+## M3 FINAL PACK (Manual Verify)
+- Audit: PASS (Manual 152 tests passed)
+- Lint: PASS
+- Runlog: docs/evidence/runlog_m3_finalpack_manual_RETRY_2.md
+## Dependency Chain (SSOT)
+1. PR #61 (SSOT v2.1)
+2. PR #60 (ChainRun v1.9)
+3. PR #63 (M3 Scheduler)

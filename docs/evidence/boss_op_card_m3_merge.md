@@ -8,7 +8,10 @@
    - Ensure #60 (`maint`) & #61 (`docs`) are approved/merged.
    - Standard Squash Merge into `main`.
 2. **Verify M3 PR (Scheduler)**:
-   - Target: `main` (after #60/#61 merge).
+  ## 依存/Merge順序
+1. **PR #61** (SSOT v2.1) -> main
+2. **PR #60** (ChainRun v1.9) -> main
+3. **PR #63** (M3 Scheduler) -> docs/flash-resume-closeout0/#61 merge).
    - Current Draft: `feat/m3-scheduler` -> `docs/flash-resume-closeout`.
    - Action: Standard Squash Merge.
 

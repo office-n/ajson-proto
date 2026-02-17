@@ -14,7 +14,7 @@
 - **M3 (feat/m3-scheduler)**: **152 passed** (新規テスト6件込み)
   - 証跡: `docs/evidence/walkthrough_m3_final.md`
 - **boot/preflight/phase10_audit**: **PASS**
-  - 証跡ログ: `docs/evidence/audit_report_20260214_181737.md`
+  - 証跡ログ: `docs/evidence/audit_report_20260217_192455.md`
 
 ## 変更ファイルの要約
 - `ajson/core/scheduler_store_sqlite.py`: SQLite 永続化層の新規実装

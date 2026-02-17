@@ -56,6 +56,18 @@ class SchedulerStore:
                 CREATE INDEX IF NOT EXISTS idx_scheduler_tasks_state 
                 ON scheduler_tasks(state)
             """)
+            # Evidence Chain Table (Append-Only)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS evidence_chain (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    task_id TEXT,
+                    event_kind TEXT NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    prev_hash TEXT NOT NULL,
+                    curr_hash TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
             conn.commit()
 
     def enqueue(self, task_id: str, payload: Dict[str, Any]) -> str:
@@ -65,6 +77,7 @@ class SchedulerStore:
                 "INSERT INTO scheduler_tasks (id, state, payload_json) VALUES (?, ?, ?)",
                 (task_id, TaskStatus.READY.value, json.dumps(payload))
             )
+            self._append_evidence_tx(conn, task_id, "ENQUEUE", payload)
             conn.commit()
         return task_id
 
@@ -85,6 +98,7 @@ class SchedulerStore:
                 "UPDATE scheduler_tasks SET state = ?, hold_until = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                 (state.value, hold_until, task_id)
             )
+            self._append_evidence_tx(conn, task_id, f"UPDATE_STATE::{state.value}", {"hold_until": hold_until})
             conn.commit()
 
     def dequeue(self) -> Optional[Dict[str, Any]]:
@@ -102,12 +116,16 @@ class SchedulerStore:
                     "UPDATE scheduler_tasks SET state = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
                     (TaskStatus.RUNNING.value, task_id)
                 )
-                conn.commit()
                 
                 # Fetch again for return
                 task = dict(task_row)
+                task_payload = json.loads(task['payload_json'])
+                
+                self._append_evidence_tx(conn, task_id, "DEQUEUE", task_payload)
+                conn.commit()
+
                 task['state'] = TaskStatus.RUNNING.value
-                task['payload'] = json.loads(task['payload_json'])
+                task['payload'] = task_payload
                 return task
         return None
 
@@ -121,17 +139,39 @@ class SchedulerStore:
             return [dict(r) for r in rows]
 
     def set_evidence_hash(self, task_id: str, metadata: Dict[str, Any]):
-        """Calculate and store hash of normalized metadata"""
-        # Normalize: replace /[USER_HOME]/... with [USER_HOME] as requested
-        normalized_str = json.dumps(metadata, sort_keys=True)
-        # Placeholder for actual normalization logic (e.g. regex replace)
-        # For now, just hashing the metadata as proof of concept
-        evidence_hash = hashlib.sha256(normalized_str.encode()).hexdigest()
-        
+        """Calculate and store hash of normalized metadata (Legacy wrapper + Chain append)"""
+        # Chain append (This is the robust v2.1 implementation)
         with self._get_connection() as conn:
+            curr_hash = self._append_evidence_tx(conn, task_id, "EVIDENCE_HASH", metadata)
+            
+            # Update legacy column for backward compatibility/quick lookup
             conn.execute(
                 "UPDATE scheduler_tasks SET evidence_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-                (evidence_hash, task_id)
+                (curr_hash, task_id)
             )
             conn.commit()
-        return evidence_hash
+        return curr_hash
+
+    def _append_evidence_tx(self, conn, task_id: str, kind: str, payload: Dict[str, Any]) -> str:
+        """Internal: Append to evidence chain within a transaction"""
+        # 1. Get last hash
+        last_row = conn.execute("SELECT curr_hash FROM evidence_chain ORDER BY id DESC LIMIT 1").fetchone()
+        prev_hash = last_row[0] if last_row else "0" * 64
+
+        # 2. Normalize payload
+        payload_json = json.dumps(payload, sort_keys=True)
+        
+        # 3. Calc new hash: sha256(prev + kind + task_id + payload)
+        # We exclude timestamp from hash calculation to make it deterministic given the sequence,
+        # but we store timestamp. Or should we include it?
+        # Use simple deterministic verification: prev + kind + task_id + payload
+        feed = f"{prev_hash}{kind}{task_id}{payload_json}"
+        curr_hash = hashlib.sha256(feed.encode()).hexdigest()
+
+        # 4. Insert
+        conn.execute(
+            "INSERT INTO evidence_chain (task_id, event_kind, payload_json, prev_hash, curr_hash) VALUES (?, ?, ?, ?, ?)",
+            (task_id, kind, payload_json, prev_hash, curr_hash)
+        )
+        return curr_hash
+

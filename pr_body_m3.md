@@ -6,7 +6,7 @@
 ## 実装範囲
 - SQLite SchedulerStore: enqueue, dequeue, ack, nack, hold
 - WAITING_APPROVAL 状態の検出と迂回ロジック
-- evidence_hash(SHA256, JSON正規化) 実装
+- **証跡チェーン**: `evidence_chain` テーブルによる改竄検知 (SHA256 + prev_hash 連結)
 
 ## 検証結果
 - **ベースラインSSOT**: 146 passed (PR #60/#61)

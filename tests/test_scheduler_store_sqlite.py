@@ -67,6 +67,28 @@ def test_evidence_hash(store):
     assert task['evidence_hash'] == h1
     assert len(h1) == 64  # SHA256 hex
     
-    # Deterministic hash check
+    # Chaining check: same input should produce different hash due to prev_hash
     h2 = store.set_evidence_hash("t-other", metadata)
-    assert h1 == h2
+    assert h1 != h2
+
+def test_evidence_chain(store, temp_db):
+    """Verify prev_hash linking"""
+    t1 = "chain-1"
+    store.enqueue(t1, {"cmd": "start"})  # Event 1: ENQUEUE
+
+    with sqlite3.connect(temp_db) as conn:
+        rows = conn.execute("SELECT prev_hash, curr_hash, event_kind FROM evidence_chain ORDER BY id ASC").fetchall()
+        assert len(rows) == 1
+        e1 = rows[0]
+        assert e1[2] == "ENQUEUE"
+        assert e1[0] == "0" * 64  # First event prev_hash is all zeros
+        h1 = e1[1]
+
+    store.update_state(t1, TaskStatus.RUNNING) # Event 2: UPDATE_STATE
+    
+    with sqlite3.connect(temp_db) as conn:
+        rows = conn.execute("SELECT prev_hash, curr_hash FROM evidence_chain ORDER BY id ASC").fetchall()
+        assert len(rows) == 2
+        e2 = rows[1]
+        assert e2[0] == h1  # Event 2 prev_hash must match Event 1 curr_hash
+

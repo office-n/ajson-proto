@@ -7,7 +7,9 @@ M3 Scheduler の SQLite 永続化層の実装、および主要ブランチに�
 ### 1. SQLite 永続化層の構築
 - **[NEW] `ajson/core/scheduler_store_sqlite.py`**:
   - `scheduler_tasks` テーブルによるタスク状態（READY, RUNNING, DONE, FAILED, WAITING_APPROVAL, HOLD）の管理。
-  - 証跡メタデータの正規化とハッシュ計算（SHA256）の基盤実装。
+  - **[NEW] `evidence_chain` テーブル**:
+    - 全操作（Enqueue/Dequeue/Update）を追記型で記録。
+    - `curr_hash = SHA256(prev_hash + kind + task_id + payload)` によるチェーン構造を実装（Spec v2.1準拠）。
 - **[MODIFY] `ajson/core/scheduler.py`**:
   - インメモリ・キューから `SchedulerStore` (SQLite) への切り替えによる、再起動に強いタスク管理の実現。
 

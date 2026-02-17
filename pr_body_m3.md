@@ -9,7 +9,7 @@
 - evidence_hash(SHA256, JSON正規化) 実装
 
 ## 検証結果
-- **ベースラインSSOT**: 146 passed (PR #61/#62)
+- **ベースラインSSOT**: 146 passed (PR #60/#61)
   - 証跡: runlog_v1_3_2026-02-11.md (Archived in evidence-archive/m3-runlogs-keep)
 - **M3 (feat/m3-scheduler)**: **151 passed** (新規テスト5件込み)
   - 証跡: `docs/evidence/walkthrough_m3_final.md`

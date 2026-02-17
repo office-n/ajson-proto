@@ -4,14 +4,11 @@
 
 ## Merge Instructions (Boss Only)
 
-1. **Verify PR #61 (Baseline)**:
-   - Ensure `docs/flash-resume-closeout` is approved.
+1. **Verify PR #60/#61 (Baseline)**:
+   - Ensure #60 (`maint`) & #61 (`docs`) are approved/merged.
    - Standard Squash Merge into `main`.
-2. **Verify PR #62 (M2 MVP)**:
-   - Ensure `feat/m2-local-host-mvp` is approved.
-   - Standard Squash Merge into `main`.
-3. **Verify M3 PR (Scheduler)**:
-   - Target: `main` (after #61/#62 merge) OR stacked on #61.
+2. **Verify M3 PR (Scheduler)**:
+   - Target: `main` (after #60/#61 merge).
    - Current Draft: `feat/m3-scheduler` -> `docs/flash-resume-closeout`.
    - Action: Standard Squash Merge.
 

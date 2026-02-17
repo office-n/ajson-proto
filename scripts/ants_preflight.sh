@@ -1,5 +1,5 @@
 #!/bin/bash
-# ants_preflight.sh
+# scripts/ants_preflight.sh
 # Usage: bash scripts/ants_preflight.sh <report_file>
 
 REPORT_FILE=$1
@@ -14,27 +14,65 @@ if [ ! -f "$REPORT_FILE" ]; then
   exit 1
 fi
 
-
-# 1. Forbidden phrases check
-if grep -q "Progress Updates" "$REPORT_FILE"; then
-  echo "NG: Forbidden phrase 'Progress Updates' found in $REPORT_FILE. Use 'Final Report Only'."
+# ==============================================================================
+# 1. JST Timestamp Check (Must be in first 5 lines)
+# ==============================================================================
+HEADER=$(head -n 5 "$REPORT_FILE")
+if ! echo "$HEADER" | grep -qE "\+09:?00"; then
+  echo "NG: First 5 lines must contain JST timestamp (+09:00 or +0900)."
   exit 1
 fi
 
-# 2. English-only (ASCII ratio) check
-# Strategy: Count total bytes vs ASCII bytes. If ASCII > 90%, it's likely English-only.
-# Using 'wc -c' for total bytes and 'tr -cd "[[:print:]]\t\n" | wc -c' for ASCII printable.
-TOTAL_BYTES=$(wc -c < "$REPORT_FILE")
-ASCII_BYTES=$(tr -cd '\000-\177' < "$REPORT_FILE" | wc -c)
+# ==============================================================================
+# 2. Forbidden Phrases & Formats
+# ==============================================================================
+# 進捗小出しの禁止 (Progress Updates 等のテンプレ混入)
+if grep -qiE "Progress Updates|Step ID: [0-9]+" "$REPORT_FILE"; then
+  echo "NG: Forbidden progress-update metadata found in $REPORT_FILE."
+  exit 1
+fi
 
+# 報告ヘッダーの単一性
+REPORT_COUNT=$(grep -c "^#.*Report" "$REPORT_FILE")
+if [ "$REPORT_COUNT" -gt 1 ]; then
+    echo "NG: Multiple '# ... Report' headers found. Ensure only ONE final report."
+    exit 1
+fi
+
+# ==============================================================================
+# 3. English Error Messages (Quota/Limit/Funds)
+# ==============================================================================
+ERR_PHRASES="Model quota limit exceeded|Insufficient funds|Rate limit reached|Flash quota exceeded"
+if grep -qiE "$ERR_PHRASES" "$REPORT_FILE"; then
+  echo "NG: English error message found in report. Use Japanese explanation."
+  echo "Found: $(grep -iE "$ERR_PHRASES" "$REPORT_FILE" | head -n 1)"
+  exit 1
+fi
+
+# ==============================================================================
+# 4. Forbidden Strings (Path info, sandboxes)
+# ==============================================================================
+FORBIDDEN_STRS="file:///|/Users/|\\\\Users\\\\|/mnt/|sandbox:"
+if grep -qE "$FORBIDDEN_STRS" "$REPORT_FILE"; then
+  echo "NG: Forbidden path information (e.g. /Users/...) found in $REPORT_FILE."
+  echo "Line: $(grep -nE "$FORBIDDEN_STRS" "$REPORT_FILE" | head -n 1)"
+  exit 1
+fi
+
+# ==============================================================================
+# 5. Japanese-only Check (ASCII ratio)
+# ==============================================================================
+TOTAL_BYTES=$(wc -c < "$REPORT_FILE")
+# 空ファイルは無視
 if [ "$TOTAL_BYTES" -gt 0 ]; then
-  # Calculate ASCII ratio (integer math)
+  ASCII_BYTES=$(tr -cd '\000-\177' < "$REPORT_FILE" | wc -c)
   RATIO=$(( 100 * ASCII_BYTES / TOTAL_BYTES ))
   if [ "$RATIO" -gt 90 ]; then
-    echo "NG: Report content seems to be English-only (ASCII ratio: ${RATIO}%). Use Japanese."
+    echo "NG: Report seems to be English-only (ASCII ratio: ${RATIO}%). Japanese required."
     exit 1
   fi
 fi
 
-echo "OK: Preflight passed for $REPORT_FILE (ASCII: ${RATIO}%)"
+echo "OK: Preflight passed for $REPORT_FILE (JST OK, ASCII: ${RATIO}%)"
 exit 0
+

@@ -1,28 +1,41 @@
 ## PROOF PACK
-- timestamp: 2026-02-11 13:46:49 +0900
+- timestamp: 2026-02-18 00:11:02 +0900
 - pwd: ajson-proto
 
 ### GIT
 - hooksPath: .githooks
 
 ### git status (porcelain)
+A  docs/evidence/m4_backlog_v1.md
+ M docs/evidence/runlog_chain_20260217_120932.md
+ M docs/evidence/runlog_m3_truegreen_20260217_205552.md
+ D docs/phase8_hands_plan_lite.md
  M logs/boot/latest.md
  M logs/proof/latest.md
-?? docs/evidence/evidence_ssot_status_board_2026_02_11.md
-?? docs/reports/ants_thread_report_2026_02_11_pr53_merge_phase9_7_kickoff.md
-?? docs/reports/git_log_2026_02_11.txt
-?? docs/ssot/
+ M scripts/phase10_audit.sh
+?? docs/evidence/audit_report_20260218_001048.md
+?? lint_report.txt
+?? scripts/audit_scan.py
 
 ### git log -5
-eae4efe docs: add AJSON spec v2.1 (cockpit + governance) (#53)
-e7a7134 docs: finalize SSOT with PR#50/49 merges and timestamp fix (#51)
-46b624f docs: AJSON spec v0.2 (cockpit + connectors + RPA + local workspace + costs) (#49)
-3e28013 docs: SSOT for PR#48 merge facts (#50)
-77c8378 feat: Phase9.6 Realtime API Skeleton (v2) (#48)
+d6cd6b3 docs(evidence): true green proof (M3 final)
+89e9ef6 docs(evidence): final gate fix (audit passed)
+5b613b8 docs(evidence): fix typos and unify test count to 152 passed
+c9d759d docs(evidence): finalize proof pack with 152 passed and audit pass
+8127adc docs(evidence): update boot/proof packs for final verification
 
 ### staged diff (stat)
- ajson/core/voice.py | 14 +++++++++-----
- 1 file changed, 9 insertions(+), 5 deletions(-)
+ docs/evidence/m4_backlog_v1.md | 101 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 101 insertions(+)
 
 ### NOTE
 - このログが出せない作業は「未検証/未完了」扱い
+
+## M3 FINAL PACK (Manual Verify)
+- Audit: PASS (Manual 152 tests passed)
+- Lint: PASS
+- Runlog: docs/evidence/runlog_m3_finalpack_manual_RETRY_2.md
+## Dependency Chain (SSOT)
+1. PR #61 (SSOT v2.1)
+2. PR #60 (ChainRun v1.9)
+3. PR #63 (M3 Scheduler)

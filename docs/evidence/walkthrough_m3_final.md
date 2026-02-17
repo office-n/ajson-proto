@@ -1,6 +1,6 @@
 # Walkthrough - M3 Scheduler 実装 & SSOT 146 固定
 
-M3 Scheduler の SQLite 永続化層の実装、および主要ブランチにおける pytest SSOT (146 passed) の物理検証を完了しました。
+M3 Scheduler の SQLite 永続化層の実装、および主要ブランチにおける- **Test**: `pytest` 152 passed (M3追加分含む) の物理検証を完了しました。
 
 ## 完了した作業
 

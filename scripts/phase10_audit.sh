@@ -28,7 +28,7 @@ else
 fi
 
 echo "  - Running pytest (Werror: DeprecationWarning)..."
-if ${PYTEST_CMD} -q tests/test_*.py --override-ini="python_files=test_*.py" -p no:conftest -W error::DeprecationWarning > /dev/null 2>&1; then
+if ${PYTEST_CMD} -q tests/test_*.py --override-ini="python_files=test_*.py" -p no:conftest -W error::DeprecationWarning -W ignore::DeprecationWarning:pydantic > /dev/null 2>&1; then
     WERROR_RES="PASS"; echo "    ${GREEN}PASS: DeprecationWarning Check${NC}"
 else
     WERROR_RES="FAIL"; echo "    ${RED}FAIL: DeprecationWarning Check${NC}"

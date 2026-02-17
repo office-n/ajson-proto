@@ -6,42 +6,15 @@ Activated via APPROVAL_STORE_DB environment variable.
 """
 import sqlite3
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+from ajson.utils.time import get_utc_iso, get_utc_now
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, asdict
 import os
+from ajson.hands.domain import ApprovalRequest, ApprovalGrant, ApprovalDecision
 
 
 @dataclass
-class ApprovalRequest:
-    """Persistent approval request"""
-    request_id: str
-    operation: str
-    category: str
-    reason: str
-    status: str  # pending, approved, denied
-    metadata: Dict[str, Any]
-    created_at: str
-    
-    def to_dict(self) -> Dict[str, Any]:
-        return asdict(self)
-
-
-@dataclass
-class ApprovalGrant:
-    """Persistent approval grant"""
-    grant_id: str
-    request_id: str
-    scope: List[str]
-    expires_at: str
-    created_at: str
-    
-    def to_dict(self) -> Dict[str, Any]:
-        result = asdict(self)
-        result['scope'] = json.dumps(self.scope)
-        return result
-
-
 class SQLiteApprovalStore:
     """SQLite-backed approval store"""
     
@@ -57,7 +30,9 @@ class SQLiteApprovalStore:
     
     def _ensure_db(self):
         """Ensure database and tables exist"""
-        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        db_dir = os.path.dirname(self.db_path)
+        if db_dir:
+            os.makedirs(db_dir, exist_ok=True)
         
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
@@ -87,6 +62,16 @@ class SQLiteApprovalStore:
                 CREATE INDEX IF NOT EXISTS idx_requests_status 
                 ON requests(status)
             """)
+
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS allowlist_rules (
+                    rule_id TEXT PRIMARY KEY,
+                    host_pattern TEXT NOT NULL,
+                    port INTEGER NOT NULL,
+                    reason TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+            """)
             
             conn.commit()
     
@@ -107,7 +92,7 @@ class SQLiteApprovalStore:
             reason=reason,
             status="pending",
             metadata=metadata or {},
-            created_at=datetime.utcnow().isoformat()
+            created_at=get_utc_iso()
         )
         
         with sqlite3.connect(self.db_path) as conn:
@@ -151,16 +136,26 @@ class SQLiteApprovalStore:
             for row in rows
         ]
     
-    def approve_request(self, request_id: str, decision: "ApprovalDecision") -> ApprovalGrant:
+    def approve_request(self, request_id: str, decision: ApprovalDecision) -> ApprovalGrant:
         """Approve request and create grant"""
         import uuid
         
+        # We need to fetch the request to get the operation
+        with sqlite3.connect(self.db_path) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.execute("SELECT operation FROM requests WHERE request_id = ?", (request_id,))
+            row = cursor.fetchone()
+            if not row:
+                raise ValueError(f"Request {request_id} not found")
+            operation = row['operation']
+
         grant = ApprovalGrant(
             grant_id=str(uuid.uuid4()),
             request_id=request_id,
+            operation=operation,
             scope=decision.scope,
-            expires_at=(datetime.utcnow() + timedelta(hours=1)).isoformat(),
-            created_at=datetime.utcnow().isoformat()
+            expires_at=(get_utc_now() + timedelta(hours=1)).isoformat(),
+            granted_at=get_utc_iso()
         )
         
         with sqlite3.connect(self.db_path) as conn:
@@ -171,6 +166,7 @@ class SQLiteApprovalStore:
             )
             
             # Create grant
+            # Note: storing granted_at in created_at column
             conn.execute(
                 """INSERT INTO grants 
                    (grant_id, request_id, scope, expires_at, created_at)
@@ -180,7 +176,7 @@ class SQLiteApprovalStore:
                     grant.request_id,
                     json.dumps(grant.scope),
                     grant.expires_at,
-                    grant.created_at
+                    grant.granted_at
                 )
             )
             conn.commit()
@@ -211,23 +207,47 @@ class SQLiteApprovalStore:
         
         # Check expiration
         expires_at = datetime.fromisoformat(row['expires_at'])
-        if datetime.utcnow() > expires_at:
+        if get_utc_now() > expires_at:
             return False
         
         # Check scope
         scope = json.loads(row['scope'])
-        operation_tool = operation.split()[0] if ' ' in operation else operation
-        
-        return operation_tool in scope or '*' in scope
+        # operation check logic duplicated from domain or reused?
+        # domain grant has matches_scope method.
+        # But we need to hydrate the object to use it, OR dup the logic.
+        # Reuse domain logic is better.
+        # But we need 'operation' field to hydrate.
+        # Fetch operation from requests
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.execute("SELECT operation FROM requests WHERE request_id = ?", (row['request_id'],))
+            req_row = cursor.fetchone()
+            op_stored = req_row[0] if req_row else ""
+            
+        grant = ApprovalGrant(
+             grant_id=row['grant_id'],
+             request_id=row['request_id'],
+             operation=op_stored,
+             scope=scope,
+             expires_at=row['expires_at'],
+             granted_at=row['created_at']
+        )
+        return grant.matches_scope(operation)
     
     def get_active_grants(self) -> List[ApprovalGrant]:
         """Get all active (non-expired) grants"""
-        now = datetime.utcnow().isoformat()
+        now = get_utc_iso()
         
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
+            # JOIN to get operation
             cursor = conn.execute(
-                "SELECT * FROM grants WHERE expires_at > ? ORDER BY created_at DESC",
+                """
+                SELECT g.*, r.operation 
+                FROM grants g 
+                JOIN requests r ON g.request_id = r.request_id 
+                WHERE g.expires_at > ? 
+                ORDER BY g.created_at DESC
+                """,
                 (now,)
             )
             rows = cursor.fetchall()
@@ -236,9 +256,10 @@ class SQLiteApprovalStore:
             ApprovalGrant(
                 grant_id=row['grant_id'],
                 request_id=row['request_id'],
+                operation=row['operation'],
                 scope=json.loads(row['scope']),
                 expires_at=row['expires_at'],
-                created_at=row['created_at']
+                granted_at=row['created_at']
             )
             for row in rows
         ]

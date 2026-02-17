@@ -1,5 +1,5 @@
 ## BOOT PACK
-- timestamp: 2026-02-11 13:46:48 +0900
+- timestamp: 2026-02-18 00:10:47 +0900
 - pwd: ajson-proto
 
 ### PACK LINK CHECK
@@ -12,18 +12,21 @@
 - hooksPath: .githooks
 
 ### git status (porcelain)
+A  docs/evidence/m4_backlog_v1.md
+ M docs/evidence/runlog_chain_20260217_120932.md
+ M docs/evidence/runlog_m3_truegreen_20260217_205552.md
+ D docs/phase8_hands_plan_lite.md
  M logs/boot/latest.md
-?? docs/evidence/evidence_ssot_status_board_2026_02_11.md
-?? docs/reports/ants_thread_report_2026_02_11_pr53_merge_phase9_7_kickoff.md
-?? docs/reports/git_log_2026_02_11.txt
-?? docs/ssot/
+ M scripts/phase10_audit.sh
+?? lint_report.txt
+?? scripts/audit_scan.py
 
 ### git log -5
-eae4efe docs: add AJSON spec v2.1 (cockpit + governance) (#53)
-e7a7134 docs: finalize SSOT with PR#50/49 merges and timestamp fix (#51)
-46b624f docs: AJSON spec v0.2 (cockpit + connectors + RPA + local workspace + costs) (#49)
-3e28013 docs: SSOT for PR#48 merge facts (#50)
-77c8378 feat: Phase9.6 Realtime API Skeleton (v2) (#48)
+d6cd6b3 docs(evidence): true green proof (M3 final)
+89e9ef6 docs(evidence): final gate fix (audit passed)
+5b613b8 docs(evidence): fix typos and unify test count to 152 passed
+c9d759d docs(evidence): finalize proof pack with 152 passed and audit pass
+8127adc docs(evidence): update boot/proof packs for final verification
 
 ### NOTE
 - non-git folders are 'All Green' if PACK LINK CHECK is OK and logs update.

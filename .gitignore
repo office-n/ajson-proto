@@ -42,3 +42,4 @@ uploads/*
 !uploads/.gitkeep
 .ants/
 run/*.pid
+tests/uploads/

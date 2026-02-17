@@ -1,0 +1,33 @@
+name: Phase 10 Audit
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          
+      - name: Run Phase 10 Audit
+        run: |
+          chmod +x scripts/phase10_audit.sh
+          chmod +x scripts/ants_boot.sh
+          chmod +x scripts/lint_forbidden_strings.sh
+          # origin/main HEAD check might need fetch
+          git fetch origin main --depth=1
+          bash scripts/phase10_audit.sh

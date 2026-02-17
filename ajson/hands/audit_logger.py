@@ -10,7 +10,7 @@ Provides structured logging for:
 """
 import logging
 import json
-from datetime import datetime
+from ajson.utils.time import get_utc_iso, get_utc_now
 from typing import Dict, Any, Optional
 from pathlib import Path
 
@@ -33,7 +33,7 @@ class AuditLogger:
         self.logger.setLevel(logging.INFO)
         
         # File handler (daily rotation)
-        log_file = self.log_dir / f"audit_{datetime.now().strftime('%Y%m%d')}.jsonl"
+        log_file = self.log_dir / f"audit_{get_utc_now().strftime('%Y%m%d')}.jsonl"
         handler = logging.FileHandler(log_file)
         handler.setLevel(logging.INFO)
         
@@ -53,7 +53,7 @@ class AuditLogger:
     def _log(self, event_type: str, data: Dict[str, Any]):
         """Log audit event"""
         event = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": get_utc_iso(),
             "event_type": event_type,
             **data
         }

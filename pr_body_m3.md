@@ -9,9 +9,9 @@
 - **証跡チェーン**: `evidence_chain` テーブルによる改竄検知 (SHA256 + prev_hash 連結)
 
 ## 検証結果
-- **ベースラインSSOT- **今回の開発**: 152 passed (チェーン検証含む)PR #60/#61)
+- **ベースラインSSOT**: 146 passed (PR #60/#61)
   - 証跡: runlog_v1_3_2026-02-11.md (Archived in evidence-archive/m3-runlogs-keep)
-- **M3 (feat/m3-scheduler)**: **151 passed** (新規テスト5件込み)
+- **M3 (feat/m3-scheduler)**: **152 passed** (新規テスト6件込み)
   - 証跡: `docs/evidence/walkthrough_m3_final.md`
 - **boot/preflight/phase10_audit**: **PASS**
   - 証跡ログ: `docs/evidence/audit_report_20260214_181737.md`

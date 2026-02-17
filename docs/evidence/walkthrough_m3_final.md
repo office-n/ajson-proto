@@ -1,6 +1,6 @@
 # Walkthrough - M3 Scheduler 実装 & SSOT 146 固定
 
-M3 Scheduler の SQLite 永続化層の実装、および主要ブランチにおける- **Test**: `pytest` 152 passed (M3追加分含む) の物理検証を完了しました。
+M3 Scheduler の SQLite 永続化層の実装、および主要ブランチにおける pytest SSOT (152 passed) の物理検証を完了しました。
 
 ## 完了した作業
 
@@ -20,7 +20,7 @@ M3 Scheduler の SQLite 永続化層の実装、および主要ブランチに�
 | :--- | :--- | :--- |
 | `docs/flash-resume-closeout` | **146 passed** | PR #61 ベースライン |
 | `feat/m2-local-host-mvp` | **146 passed** | PR #62 ベースライン |
-| `feat/m3-scheduler` | **151 passed** | ベース 146 + 新規 M3 テスト 5 件 |
+| `feat/m3-scheduler` | **152 passed** | ベース 146 + 新規 M3 テスト 6 件 |
 
 ### 3. ガード遵守とコミット
 - `lint_forbidden_strings.sh` による絶対パスチェックをパス。
@@ -39,7 +39,7 @@ tests/test_scheduler_store_sqlite.py::test_get_backlog PASSED
 tests/test_scheduler_store_sqlite.py::test_evidence_hash PASSED
 
 # スイート全体
-============================= 151 passed in 22.25s =============================
+============================= 152 passed in 22.25s =============================
 ```
 
 ## 次のステップ

@@ -59,37 +59,8 @@ fi
 set -e
 
 echo "[3/4] Scanning for forbidden strings..."
-P_FILE="file:///"
-P_USERS="/Users/"
-FORBIDDEN_PATTERN="${P_FILE}|${P_USERS}|/mnt/|sandbox:|Progress Updates|Model quota limit exceeded"
 TMP_VIOLATIONS="/tmp/audit_violations.txt"
-
-# Prefer rg if available, else grep
-if command -v rg >/dev/null 2>&1; then
-    SCAN_CMD="rg -n --no-heading"
-    # rg regex might need slightly different syntax or escaping, but standard pipe logic is safest with grep fallback if rg fails
-    # actually, user instruction says "rg if missing fallback to grep".
-    # simple implementation: use grep as it is robust and installed everywhere.
-    # The instruction allows "grep -RIn" as fallback.
-    # To be strictly safe and avoid rg syntax diffs, I will use grep.
-    # But to satisfy "fallback" requirement, I should check rg? No, "Environment Non-dependency" suggests grep is better.
-    # I'll stick to grep for stability unless user explicitly demanded rg usage.
-    # User said: "forbidden strings scan は rg が無い場合 grep -RIn へフォールバック".
-    # I will use grep -RIn.
-    SCAN_CMD="grep -RInE"
-else
-    SCAN_CMD="grep -RInE"
-fi
-
-# Force grep usage for stability as rg was causing issues in previous turns
-SCAN_CMD="grep -RInE"
-
-$SCAN_CMD "${FORBIDDEN_PATTERN}" . --exclude-dir=.git --exclude-dir=venv --exclude-dir=node_modules | \
-grep -vE "scripts/(phase10_audit|ants_preflight|lint_forbidden_strings)\.sh" | \
-grep -vE "docs/(ops/production_readiness_checklist\.md|evidence/)" | \
-grep -v "Binary file" > "${TMP_VIOLATIONS}" || true
-
-if [ ! -s "${TMP_VIOLATIONS}" ]; then
+if python3 scripts/audit_scan.py > "${TMP_VIOLATIONS}" 2>&1; then
     STRINGS_RES="PASS"; echo "    ${GREEN}PASS: No forbidden strings found.${NC}"
 else
     STRINGS_RES="FAIL"; echo "    ${RED}FAIL: Forbidden strings detected!${NC}"

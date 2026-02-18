@@ -9,4 +9,5 @@
 - docs/
 - ajson/
 - tests/
+- .github/workflows/
 - tickets/

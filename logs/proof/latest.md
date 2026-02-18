@@ -1,5 +1,5 @@
 ## PROOF PACK
-- timestamp: 2026-02-18 00:11:02 +0900
+- timestamp: 2026-02-18 16:51:29 +0900
 - pwd: ajson-proto
 
 ### GIT
@@ -7,35 +7,24 @@
 
 ### git status (porcelain)
 A  docs/evidence/m4_backlog_v1.md
- M docs/evidence/runlog_chain_20260217_120932.md
- M docs/evidence/runlog_m3_truegreen_20260217_205552.md
- D docs/phase8_hands_plan_lite.md
- M logs/boot/latest.md
+A  docs/evidence/runlog_spec_transfer_20260218_165039.md
+M  docs/spec/ajson_spec_v2_1_2026_02_11.md
+A  docs/spec/appendix_remote_bridge_from_cockpit.md
  M logs/proof/latest.md
- M scripts/phase10_audit.sh
-?? docs/evidence/audit_report_20260218_001048.md
-?? lint_report.txt
-?? scripts/audit_scan.py
 
 ### git log -5
+3d39993 docs(evidence): m3 final pack (manual verify)
+9babd29 docs(evidence): truegreen fix pack (rescan ok, masked abs path)
 d6cd6b3 docs(evidence): true green proof (M3 final)
 89e9ef6 docs(evidence): final gate fix (audit passed)
 5b613b8 docs(evidence): fix typos and unify test count to 152 passed
-c9d759d docs(evidence): finalize proof pack with 152 passed and audit pass
-8127adc docs(evidence): update boot/proof packs for final verification
 
 ### staged diff (stat)
- docs/evidence/m4_backlog_v1.md | 101 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 101 insertions(+)
+ docs/evidence/m4_backlog_v1.md                     |  65 +++++++++++++
+ .../runlog_spec_transfer_20260218_165039.md        | 103 +++++++++++++++++++++
+ docs/spec/ajson_spec_v2_1_2026_02_11.md            |   8 ++
+ docs/spec/appendix_remote_bridge_from_cockpit.md   |  69 ++++++++++++++
+ 4 files changed, 245 insertions(+)
 
 ### NOTE
 - このログが出せない作業は「未検証/未完了」扱い
-
-## M3 FINAL PACK (Manual Verify)
-- Audit: PASS (Manual 152 tests passed)
-- Lint: PASS
-- Runlog: docs/evidence/runlog_m3_finalpack_manual_RETRY_2.md
-## Dependency Chain (SSOT)
-1. PR #61 (SSOT v2.1)
-2. PR #60 (ChainRun v1.9)
-3. PR #63 (M3 Scheduler)

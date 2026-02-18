@@ -6,7 +6,7 @@ Activated via APPROVAL_STORE_DB environment variable.
 """
 import sqlite3
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, asdict
 import os
@@ -100,6 +100,7 @@ class SQLiteApprovalStore:
         """Create approval request"""
         import uuid
         
+        now = datetime.now(timezone.utc)
         request = ApprovalRequest(
             request_id=str(uuid.uuid4()),
             operation=operation,
@@ -107,7 +108,7 @@ class SQLiteApprovalStore:
             reason=reason,
             status="pending",
             metadata=metadata or {},
-            created_at=datetime.utcnow().isoformat()
+            created_at=now.isoformat()
         )
         
         with sqlite3.connect(self.db_path) as conn:
@@ -155,12 +156,13 @@ class SQLiteApprovalStore:
         """Approve request and create grant"""
         import uuid
         
+        now = datetime.now(timezone.utc)
         grant = ApprovalGrant(
             grant_id=str(uuid.uuid4()),
             request_id=request_id,
             scope=decision.scope,
-            expires_at=(datetime.utcnow() + timedelta(hours=1)).isoformat(),
-            created_at=datetime.utcnow().isoformat()
+            expires_at=(now + timedelta(hours=1)).isoformat(),
+            created_at=now.isoformat()
         )
         
         with sqlite3.connect(self.db_path) as conn:
@@ -211,7 +213,9 @@ class SQLiteApprovalStore:
         
         # Check expiration
         expires_at = datetime.fromisoformat(row['expires_at'])
-        if datetime.utcnow() > expires_at:
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if datetime.now(timezone.utc) > expires_at:
             return False
         
         # Check scope
@@ -222,7 +226,7 @@ class SQLiteApprovalStore:
     
     def get_active_grants(self) -> List[ApprovalGrant]:
         """Get all active (non-expired) grants"""
-        now = datetime.utcnow().isoformat()
+        now = datetime.now(timezone.utc).isoformat()
         
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row

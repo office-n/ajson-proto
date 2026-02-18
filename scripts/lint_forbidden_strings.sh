@@ -32,7 +32,7 @@ else
 fi
 echo ""
 
-# Check 2: Absolute paths (/Users/, /home/)
+# Check 2: Absolute paths (Users/home)
 # Pattern constructed dynamically to avoid self-detection
 PATTERN_USERS="/""Users/"
 PATTERN_HOME="/""home/"

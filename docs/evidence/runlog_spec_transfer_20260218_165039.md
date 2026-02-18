@@ -101,3 +101,5 @@ Next: Antsに依頼。
 Evidence: 未実施
 Self-Audit: FAIL
 Next: Antsに依頼。
+
+Task7/8 Pending（CI復旧後に実施）

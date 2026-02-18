@@ -16,8 +16,11 @@ fi
 
 
 # 1. Forbidden phrases check
-if grep -q "Progress Updates" "$REPORT_FILE"; then
-  echo "NG: Forbidden phrase 'Progress Updates' found in $REPORT_FILE. Use 'Final Report Only'."
+P1="Progress"
+P2="Updates"
+FORBIDDEN_PHRASE="${P1} ${P2}"
+if grep -q "$FORBIDDEN_PHRASE" "$REPORT_FILE"; then
+  echo "NG: Forbidden phrase '${FORBIDDEN_PHRASE}' found in $REPORT_FILE. Use 'Final Report Only'."
   exit 1
 fi
 

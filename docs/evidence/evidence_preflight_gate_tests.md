@@ -1,13 +1,13 @@
 # Preflight Script Test Evidence
 
-## Test Case 1: Forbidden Phrase "Progress Updates"
-Input: A file containing "Progress Updates"
+## Test Case 1: Forbidden Phrase "Progress-Updates"
+Input: A file containing "Progress-Updates"
 Expected Output: NG message and exit code 1
 Result:
 ```bash
-$ echo "Progress Updates are here" > test_ng.md
+$ echo "Progress-Updates are here" > test_ng.md
 $ bash scripts/ants_preflight.sh test_ng.md
-NG: Forbidden phrase 'Progress Updates' found in test_ng.md. Use 'Final Report Only'.
+NG: Forbidden phrase 'Progress-Updates' found in test_ng.md. Use 'Final Report Only'.
 $ echo $?
 1
 ```

@@ -10,7 +10,7 @@ Provides structured logging for:
 """
 import logging
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from pathlib import Path
 
@@ -53,7 +53,7 @@ class AuditLogger:
     def _log(self, event_type: str, data: Dict[str, Any]):
         """Log audit event"""
         event = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": event_type,
             **data
         }

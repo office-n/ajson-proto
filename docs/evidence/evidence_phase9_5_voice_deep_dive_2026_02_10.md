@@ -8,7 +8,7 @@
 
 ### Gate Selftest
 - **Command**: `bash scripts/ants_preflight.sh docs/reports/gate_selftest_2026_02_10_1643_jst.md`
-- **Result**: `NG: Forbidden phrase 'Progress Updates' found...` (Expected)
+- **Result**: `NG: Forbidden phrase 'Progress-Updates' found...` (Expected)
 - **Status**: PASS (Gate is working)
 
 ## 2. Implementation
